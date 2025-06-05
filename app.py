@@ -77,4 +77,4 @@ st.markdown("---")
 st.subheader("📄 최근 등록된 질문")
 
 df = pd.DataFrame(data[1:], columns=data[0])
-st.dataframe(df[["이름", "질문"]].tail(5))
+st.dataframe(df[["작성자", "질문"]].tail(5))
