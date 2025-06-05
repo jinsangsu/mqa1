@@ -73,7 +73,7 @@ with container:
         st.image("title_image.png", width=130)
 
     with cols[1]:
-    st.markdown("""
+        st.markdown("""
         <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
             <p><strong>안녕하세요.</strong></p>
             <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
