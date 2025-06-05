@@ -37,13 +37,11 @@ st.markdown("매니저님들께서는 아래 양식을 통해 자주 묻는 질�
 st.markdown("### 📋 매니저 질의응답 등록")
 
 with st.form("qna_form", clear_on_submit=True):
-    col1, col2 = st.columns(2)
+    col1 = st.columns(1)
 
     with col1:
         manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
-    with col2:
-        region = st.text_input("📍 소속 지점/지역단", placeholder="예: 청주TC지점")
-
+    
     question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
     answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
 
@@ -57,7 +55,8 @@ with st.form("qna_form", clear_on_submit=True):
         if is_duplicate_question(question, existing_questions):
             st.warning("⚠ 이미 유사한 질문이 등록되어 있습니다. 다시 확인해주세요.")
         else:
-            worksheet.append_row([manager_name, region, question, answer])
+            worksheet.append_row([next_index, question_input, answer_input, writer, date])
+
             st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
 
         data = worksheet.get_all_values()
