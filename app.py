@@ -73,7 +73,7 @@ with container:
         st.image("title_image.png", width=130)
 
     with cols[1]:
-        st.markdown("""
+    st.markdown("""
         <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
             <p><strong>안녕하세요.</strong></p>
             <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
@@ -81,7 +81,8 @@ with container:
             <p>현장에서 자주 반복되는 질문과 그에 대한 명확한 답변을 등록해주시면, 설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.</p>
             <p>바쁘시겠지만 <strong>하루에 하나씩</strong>만이라도 참여해 주신다면 우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
             <p>감사합니다.</p>
-        </
+        </div>
+    """, unsafe_allow_html=True)
 # 🖼️ UI 구성
 st.markdown("### 📋 영업가족 질의응답 등록")
 
