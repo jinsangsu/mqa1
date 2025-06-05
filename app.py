@@ -22,9 +22,9 @@ gc = gspread.authorize(credentials)
 
 # 📄 구글시트 열기
 def get_worksheet():
-    spreadsheet_key = "1rJdNc_cYw3iOkOWCItjgRLw-EqjqImkZ"
+    spreadsheet_key = "1aPo40QnxQrcY7yEUM6iHa-9XJU-MIIqsjapGP7UnKIo"
     spreadsheet = gc.open_by_key(spreadsheet_key)
-    worksheet = spreadsheet.get_worksheet(0)  # 첫 번째 탭
+    worksheet = spreadsheet.get_worksheet(0)  # 첫 번째 시트
     return worksheet
 # ✅ 타이틀 및 설명
 st.set_page_config(page_title="mqa1 - 매니저 Q&A 입력", layout="centered")
