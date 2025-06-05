@@ -28,37 +28,48 @@ def get_worksheet():
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
 
-# ✅ 타이틀 및 설명
+# ✅ 페이지 설정
 st.set_page_config(page_title="충호본부 Q&A 등록", layout="centered")
 
+# ✅ 상단 이미지 & 제목
 col1, col2 = st.columns([1, 4])
 
 with col1:
-    st.image("title_image.png", width=130)
+    st.write(" ")  # 여백 추가
+    st.image("title_image.png", width=140)
 
 with col2:
     st.markdown("""
-        ## 담대한 전환! 당당한 성장!  
-        ---
-        안녕하세요.
+        <div style="text-align: center; margin-top: 10px;">
+            <h1 style="font-weight: 900; font-size: 32px; color: #222;">담대한 전환! 당당한 성장!</h1>
+            <hr style="border: none; border-top: 2px solid #EEE; width: 60%; margin: 10px auto 20px;">
+        </div>
+    """, unsafe_allow_html=True)
 
-        항상 현장에서 최선을 다해주시는  
-        우리 충청호남본부 임직원 여러분께 깊이 감사드립니다.
+# ✅ 인사말 강조 스타일
+st.markdown("""
+<div style="font-size: 16px; line-height: 1.8; font-weight: 600; color: #333;">
+안녕하세요.<br><br>
 
-        이번에 설계사분들의 반복 질문에 신속하게 대응하고  
-        지점의 운영 효율을 높이기 위해 Q&A 시스템을 준비했습니다.
+항상 현장에서 최선을 다해주시는  
+<strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong><br><br>
 
-        현장에서 업무를 하면서 설계사분들의 반복되는 질문들과
-        그에 대한 답변내용을 등록해주면 설계사분들이 조회하는 시스템입니다.
+이번에 설계사분들의 반복 질문에 신속하게 대응하고  
+지점의 운영 효율을 높이기 위해 <strong>Q&A 시스템</strong>을 준비했습니다.<br><br>
 
-        바쁘시겟지만 실시간으로 등록이 되니 하루에 하나씩이라도 
-        등록 부탁드리겟습니다.
+현장에서 업무를 하며 자주 반복되는 질문과  
+그에 대한 명확한 답변을 등록해주시면  
+설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.<br><br>
 
-        여러분의 경험과 작은 실천이
-        우리 충청호남본부의 변화와 성장에 큰 기여를 할 것입니다.
+바쁘시겠지만 <strong>하루에 하나씩이라도</strong> 등록해주시면  
+현장의 효율과 만족도가 더 높아질 것입니다.<br><br>
 
-        감사합니다.
-    """)
+<strong>여러분의 경험과 작은 실천이  
+우리 충청호남본부의 변화와 성장에 큰 기여를 할 것입니다.</strong><br><br>
+
+감사합니다.
+</div>
+""", unsafe_allow_html=True)
 
 
 # 🖼️ UI 구성
