@@ -1,0 +1,9 @@
+streamlit
+gspread==5.7.2
+google-auth
+pillow
+fastapi
+uvicorn
+sentence-transformers
+torch
+soyspacing
