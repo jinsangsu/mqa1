@@ -37,7 +37,7 @@ st.markdown("매니저님들께서는 아래 양식을 통해 자주 묻는 질�
 st.markdown("### 📋 매니저 질의응답 등록")
 
 with st.form("qna_form", clear_on_submit=True):
-    col1 = st.columns(1)
+    col1 = st.columns(1)[0]  # ✅ 올바른 방식
 
     with col1:
         manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
@@ -73,4 +73,4 @@ st.markdown("---")
 st.subheader("📄 최근 등록된 질문")
 
 df = pd.DataFrame(data[1:], columns=data[0])
-st.dataframe(df[["이름", "지역", "질문"]].tail(5))
+st.dataframe(df[["이름", "질문"]].tail(5))
