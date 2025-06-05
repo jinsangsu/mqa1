@@ -41,23 +41,31 @@ with st.form("qna_form", clear_on_submit=True):
 
     with col1:
         manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
-    
-    question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
-    answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
+        question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
+        answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
 
     submitted = st.form_submit_button("✅ 시트에 등록하기")
 
-    if submitted:
-        worksheet = get_worksheet()
-        existing_rows = worksheet.get_all_values()
-        existing_questions = [row[2] for row in existing_rows[1:] if len(row) > 2]  # 질문만 추출
+   if submitted:
+    worksheet = get_worksheet()
+    existing_rows = worksheet.get_all_values()
+    existing_questions = [row[1] for row in existing_rows[1:] if len(row) > 1]  # 질문 열만
 
-        if is_duplicate_question(question, existing_questions):
-            st.warning("⚠ 이미 유사한 질문이 등록되어 있습니다. 다시 확인해주세요.")
-        else:
-            worksheet.append_row([next_index, question_input, answer_input, writer, date])
+    if is_duplicate_question(question, existing_questions):
+        st.warning("⚠ 이미 유사한 질문이 등록되어 있습니다. 다시 확인해주세요.")
+    else:
+        next_index = len(existing_rows)
+        today = datetime.date.today().strftime("%Y-%m-%d")
 
-            st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
+        worksheet.append_row([
+            next_index,         # 번호
+            question,           # 질문
+            answer,             # 답변
+            manager_name,       # 작성자
+            today               # 작성일
+        ])
+
+        st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
 
         data = worksheet.get_all_values()
 
