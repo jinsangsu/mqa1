@@ -22,11 +22,10 @@ gc = gspread.authorize(credentials)
 
 # 📄 구글시트 열기
 def get_worksheet():
-    spreadsheet_url = "https://docs.google.com/spreadsheets/d/1rJdNc_cYw3iOkOWCItjgRLw-EqjqImkZ/edit?usp=sharing"
-    spreadsheet = gc.open_by_url(spreadsheet_url)
-    worksheet = spreadsheet.worksheet("질의응답시트")
+    spreadsheet_key = "1rJdNc_cYw3iOkOWCItjgRLw-EqjqImkZ"
+    spreadsheet = gc.open_by_key(spreadsheet_key)
+    worksheet = spreadsheet.get_worksheet(0)  # 첫 번째 탭
     return worksheet
-
 # ✅ 타이틀 및 설명
 st.set_page_config(page_title="mqa1 - 매니저 Q&A 입력", layout="centered")
 st.title("📝 매니저 Q&A 등록 시스템 (mqa1)")
