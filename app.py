@@ -31,11 +31,13 @@ def get_worksheet():
 # ✅ 타이틀 및 설명
 st.set_page_config(page_title="mqa1 - 매니저 Q&A 입력", layout="centered")
 st.title("📝 매니저 Q&A 등록 시스템 (mqa1)")
-st.markdown("매니저님들께서는 아래 양식을 통해 자주 묻는 질문과 답변을 입력해주세요. 등록된 내용은 자동으로 본부장님 구글 시트에 반영됩니다.")
+st.markdown("안녕하세요... 영업가족분들이 자주 묻는 질문과 그에 대한 답변을 입력해주시면 영업가족분들이 모바일을 통해 여기에 있는 답변을 조회할 수 있습니다. 하루에 한가지씩만 입력해주셔도 되여~~ 우리 충청호남본부 임직원여러분을 항상 응원합니다!!!
+
+최근 등록한 질문들은 하단에서 볼 수 있습니다. 질문과 답변은 충호본부 매니저 봇인 애순이봇을 이용하시면 됩니다. ")
 
 
 # 🖼️ UI 구성
-st.markdown("### 📋 매니저 질의응답 등록")
+st.markdown("### 📋 영업가족 질의응답 등록")
 
 with st.form("qna_form", clear_on_submit=True):
     col1 = st.columns(1)[0]  # ✅ 올바른 방식
