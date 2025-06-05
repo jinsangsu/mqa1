@@ -46,7 +46,7 @@ with st.form("qna_form", clear_on_submit=True):
 
     submitted = st.form_submit_button("✅ 시트에 등록하기")
 
-   if submitted:
+if submitted:
     worksheet = get_worksheet()
     existing_rows = worksheet.get_all_values()
     existing_questions = [row[1] for row in existing_rows[1:] if len(row) > 1]  # 질문 열만
