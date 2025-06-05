@@ -30,7 +30,7 @@ def get_worksheet():
 
 # ✅ 타이틀 및 설명
 st.set_page_config(page_title="충호본부 Q&A 등록", layout="centered")
-st.title("📝 충호본부 Q&A 등록 화면")
+
 col1, col2 = st.columns([1, 4])
 
 with col1:
