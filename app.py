@@ -28,10 +28,7 @@ def get_worksheet():
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
 
-# ✅ 페이지 설정
-st.set_page_config(page_title="충호본부 Q&A 등록", layout="centered")
-
-# ✅ 슬로건 (한 줄, 중앙 정렬, 모바일 대응)
+# ✅ 슬로건 (반응형 + 중앙 정렬)
 st.markdown("""
 <style>
 @media screen and (max-width: 600px) {
@@ -55,41 +52,36 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ✅ 이미지 + 인사말 (모바일에서는 세로로 쌓임)
+# ✅ 반응형 레이아웃: 이미지 + 인사말
 st.markdown("""
 <style>
 @media screen and (max-width: 768px) {
-    .intro-wrapper {
-        display: block;
-    }
-    .intro-left {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-}
-@media screen and (min-width: 769px) {
-    .intro-wrapper {
-        display: flex;
-        gap: 30px;
-        align-items: flex-start;
+    .intro-container {
+        flex-direction: column !important;
+        align-items: center !important;
     }
 }
 </style>
-
-<div class='intro-wrapper' style="margin-bottom: 30px;">
-    <div class='intro-left'>
-        <img src='https://raw.githubusercontent.com/your-image-url/title_image.png' width='130'>
-    </div>
-    <div style="flex: 4; font-size: 15px; line-height: 1.6; font-weight: 500; color: #222; max-width: 600px;">
-        <p><strong>안녕하세요.</strong></p>
-        <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
-        <p>이번에 설계사분들의 반복 질문에 신속하게 대응하고 지점의 운영 효율을 높이기 위해 <strong>Q&A 시스템</strong>을 준비했습니다.</p>
-        <p>현장에서 자주 반복되는 질문과 그에 대한 명확한 답변을 등록해주시면, 설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.</p>
-        <p>바쁘시겠지만 <strong>하루에 하나씩</strong>만이라도 참여해 주신다면 우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
-        <p>감사합니다.</p>
-    </div>
-</div>
 """, unsafe_allow_html=True)
+
+# 실제 표시: 좌우 배치 → 모바일에서는 세로 정렬
+container = st.container()
+with container:
+    cols = st.columns([1, 4])
+
+    with cols[0]:
+        st.image("title_image.png", width=130)
+
+    with cols[1]:
+        st.markdown("""
+        <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
+            <p><strong>안녕하세요.</strong></p>
+            <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
+            <p>이번에 설계사분들의 반복 질문에 신속하게 대응하고 지점의 운영 효율을 높이기 위해 <strong>Q&A 시스템</strong>을 준비했습니다.</p>
+            <p>현장에서 자주 반복되는 질문과 그에 대한 명확한 답변을 등록해주시면, 설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.</p>
+            <p>바쁘시겠지만 <strong>하루에 하나씩</strong>만이라도 참여해 주신다면 우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
+            <p>감사합니다.</p>
+        </
 # 🖼️ UI 구성
 st.markdown("### 📋 영업가족 질의응답 등록")
 
