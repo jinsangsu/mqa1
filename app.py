@@ -33,9 +33,11 @@ st.set_page_config(page_title="충호본부 Q&A 등록", layout="centered")
 
 # ✅ 1. 중앙 상단 슬로건
 st.markdown("""
-<div style='text-align: center; margin-top: 10px;'>
-    <h1 style='font-size: 30px; font-weight: 900; margin-bottom: 5px;'>담대한 전환! 당당한 성장!</h1>
-    <hr style='border: none; border-top: 2px solid #eee; width: 50%; margin: 10px auto 20px;'>
+<div style='text-align: center; margin-top: 20px; margin-bottom: 10px;'>
+    <h1 style='font-size: 32px; font-weight: 900; margin: 0px; line-height: 1.3;'>
+        담대한 전환!<br>당당한 성장!<br>충청호남본부!!
+    </h1>
+    <hr style='border: none; border-top: 2px solid #eee; width: 60%; margin: 15px auto 25px;'>
 </div>
 """, unsafe_allow_html=True)
 
