@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
 import difflib
+import datetime
 
 def is_duplicate_question(new_question, existing_questions, threshold=0.85):
     for q in existing_questions:
@@ -68,6 +69,9 @@ if submitted:
         st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
 
         data = worksheet.get_all_values()
+else:
+    worksheet = get_worksheet()
+    data = worksheet.get_all_values()
 
 st.markdown("---")
 st.subheader("📄 최근 등록된 질문")
