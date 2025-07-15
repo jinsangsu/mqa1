@@ -29,27 +29,36 @@ def get_worksheet():
 # ========== 상단 캐릭터 인사문구 (반응형) ==========
 st.markdown("""
 <style>
-@media screen and (max-width: 600px) {
-    .title-text { font-size: 18px !important; padding: 0 4px; }
+/* 전체 페이지 패딩, 마진 최소화 */
+.stApp {
+    padding-top: 4px !important;
+    margin-top: 0px !important;
 }
-@media screen and (min-width: 601px) {
-    .title-text { font-size: 24px !important; }
+
+/* 타이틀 영역 마진/패딩 강제 축소 */
+.title-text {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    font-size: 18px !important;
 }
-.intro-container, .title-text, .element-container, div[role="list"], .stApp {
+
+/* 인사말/소개 컨테이너도 여백 없애기 */
+.intro-container, .element-container, div[role="list"] {
     margin-top: 2px !important;
     margin-bottom: 2px !important;
     padding-top: 0px !important;
     padding-bottom: 0px !important;
 }
-</style>
-<div style='text-align: center; margin-top: 3px; margin-bottom: 2px;'>
-    <h1 class='title-text' style='font-weight: 900; margin: 0px; line-height: 1.25;'>
-        담대한 전환! 당당한 성장! 충청호남본부!!
-    </h1>
-    <hr style='border: none; border-top: 2px solid #eee; width: 60%; margin: 5px auto 8px;'>
-</div>
-""", unsafe_allow_html=True)
 
+/* hr(구분선) 여백도 축소 */
+hr {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 # 인사말+캐릭터 (모바일 대응 좌우 배치)
 st.markdown("""
 <style>
