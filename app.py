@@ -29,36 +29,48 @@ def get_worksheet():
 # ========== 상단 캐릭터 인사문구 (반응형) ==========
 st.markdown("""
 <style>
-/* 전체 페이지 패딩, 마진 최소화 */
+/* 전체 페이지 패딩/마진 최소화 */
 .stApp {
-    padding-top: 4px !important;
+    padding-top: 0px !important;
     margin-top: 0px !important;
-}
-
-/* 타이틀 영역 마진/패딩 강제 축소 */
-.title-text {
-    margin-top: 2px !important;
-    margin-bottom: 2px !important;
-    padding-top: 0px !important;
     padding-bottom: 0px !important;
-    font-size: 18px !important;
+    margin-bottom: 0px !important;
+    background-color: #fff;
 }
-
-/* 인사말/소개 컨테이너도 여백 없애기 */
-.intro-container, .element-container, div[role="list"] {
-    margin-top: 2px !important;
-    margin-bottom: 2px !important;
+/* 타이틀/인사말 마진/패딩 */
+.title-text, .element-container, .block-container, .stColumn, .stContainer, .stMarkdown, div[role="list"], hr {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
     padding-top: 0px !important;
     padding-bottom: 0px !important;
 }
-
-/* hr(구분선) 여백도 축소 */
+.intro-container {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+/* 이미지와 텍스트 좌우 정렬 간격 축소 */
+.stColumns {
+    gap: 8px !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+/* 폼, 박스, 입력영역 상하 padding 최소화 */
+.stForm, .stTextInput, .stTextArea, .stButton, .stMarkdown, .stSubheader, .stHeader {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
+/* 섹션 구분선(hr)도 공백 거의 없게 */
 hr {
     margin-top: 2px !important;
     margin-bottom: 2px !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 # 인사말+캐릭터 (모바일 대응 좌우 배치)
 st.markdown("""
 <style>
