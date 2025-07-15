@@ -5,7 +5,6 @@ import pandas as pd
 import difflib
 import datetime
 
-# ======= 기존 함수 및 인증 =======
 def is_duplicate_question(new_question, existing_questions, threshold=0.85):
     for q in existing_questions:
         similarity = difflib.SequenceMatcher(None, new_question.strip(), q.strip()).ratio()
@@ -13,6 +12,7 @@ def is_duplicate_question(new_question, existing_questions, threshold=0.85):
             return True
     return False
 
+# 🔐 인증
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = Credentials.from_service_account_info(
     st.secrets["gcp_service_account"],
@@ -26,6 +26,7 @@ def get_worksheet():
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
 
+# ========== 상단 캐릭터 인사문구 (반응형) ==========
 st.markdown("""
 <style>
 @media screen and (max-width: 600px) {
@@ -43,9 +44,37 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 📋 영업가족 질의응답 등록")
+# 인사말+캐릭터 (모바일 대응 좌우 배치)
+st.markdown("""
+<style>
+@media screen and (max-width: 768px) {
+    .intro-container {
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 
-# ======= Q&A 등록 폼 =======
+container = st.container()
+with container:
+    cols = st.columns([1, 4])
+    with cols[0]:
+        st.image("title_image.png", width=130)
+    with cols[1]:
+        st.markdown("""
+        <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
+            <p><strong>안녕하세요.</strong></p>
+            <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
+            <p>이번에 설계사분들의 반복 질문에 신속하게 대응하고 지점의 운영 효율을 높이기 위해 <strong>Q&A 시스템</strong>을 준비했습니다.</p>
+            <p>현장에서 자주 반복되는 질문과 그에 대한 명확한 답변을 등록해주시면, 설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.</p>
+            <p>바쁘시겠지만 <strong>하루에 하나씩</strong>만이라도 참여해 주신다면 우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
+            <p>감사합니다.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ========== Q&A 등록 폼 ==========
+st.markdown("### 📋 영업가족 질의응답 등록")
 with st.form("qna_form", clear_on_submit=True):
     manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
     question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
@@ -68,7 +97,7 @@ if submitted:
             next_index, question, answer, manager_name, today
         ])
         st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-        data = worksheet.get_all_values()  # 새로고침
+        data = worksheet.get_all_values()
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
@@ -107,7 +136,6 @@ else:
                     new_answer = st.text_area("답변 내용", value=row["답변"])
                     new_writer = st.text_input("작성자", value=row["작성자"])
                     if st.form_submit_button("저장"):
-                        # 원본 df에서 실제 행 인덱스 찾기(헤더 포함이므로 +2)
                         real_row = df.index[filtered_df.index[idx]] + 2
                         worksheet.update_cell(real_row, 2, new_question)
                         worksheet.update_cell(real_row, 3, new_answer)
