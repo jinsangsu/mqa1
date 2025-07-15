@@ -30,17 +30,23 @@ def get_worksheet():
 st.markdown("""
 <style>
 @media screen and (max-width: 600px) {
-    .title-text { font-size: 20px !important; padding: 0 10px; }
+    .title-text { font-size: 18px !important; padding: 0 4px; }
 }
 @media screen and (min-width: 601px) {
-    .title-text { font-size: 30px !important; }
+    .title-text { font-size: 24px !important; }
+}
+.intro-container, .title-text, .element-container, div[role="list"], .stApp {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
 }
 </style>
-<div style='text-align: center; margin-top: 20px; margin-bottom: 10px;'>
-    <h1 class='title-text' style='font-weight: 900; margin: 0px; line-height: 1.4;'>
+<div style='text-align: center; margin-top: 3px; margin-bottom: 2px;'>
+    <h1 class='title-text' style='font-weight: 900; margin: 0px; line-height: 1.25;'>
         담대한 전환! 당당한 성장! 충청호남본부!!
     </h1>
-    <hr style='border: none; border-top: 2px solid #eee; width: 60%; margin: 15px auto 25px;'>
+    <hr style='border: none; border-top: 2px solid #eee; width: 60%; margin: 5px auto 8px;'>
 </div>
 """, unsafe_allow_html=True)
 
