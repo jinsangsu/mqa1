@@ -71,21 +71,27 @@ if submitted:
         data = worksheet.get_all_values()  # 새로고침
 
 st.markdown("---")
-st.subheader("🔎 Q&A 검색 후 수정·삭제")
+st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
 # ======= 데이터프레임 준비 =======
 df = pd.DataFrame(data[1:], columns=data[0])
 df.reset_index(drop=True, inplace=True)
 
-# ======= 검색창 =======
-search_query = st.text_input("질문 또는 답변 내용 키워드로 검색", "")
+# ======= 복합검색: 키워드 + 작성자 이름 =======
+search_query = st.text_input("질문/답변 내용 키워드로 검색", "")
+search_writer = st.text_input("작성자 이름으로 검색", "")
 
+# 조건 조합 필터
+filtered_df = df.copy()
 if search_query.strip() != "":
-    # 키워드가 하나라도 포함된 행만 추출
-    filtered_df = df[df["질문"].str.contains(search_query, case=False, na=False) | 
-                     df["답변"].str.contains(search_query, case=False, na=False)]
-else:
-    filtered_df = df.copy()  # 아무것도 입력 안하면 전체
+    filtered_df = filtered_df[
+        filtered_df["질문"].str.contains(search_query, case=False, na=False) |
+        filtered_df["답변"].str.contains(search_query, case=False, na=False)
+    ]
+if search_writer.strip() != "":
+    filtered_df = filtered_df[
+        filtered_df["작성자"].str.contains(search_writer, case=False, na=False)
+    ]
 
 if filtered_df.empty:
     st.info("검색 결과가 없습니다.")
@@ -101,7 +107,8 @@ else:
                     new_answer = st.text_area("답변 내용", value=row["답변"])
                     new_writer = st.text_input("작성자", value=row["작성자"])
                     if st.form_submit_button("저장"):
-                        real_row = idx + 2  # 시트에서의 실제 행 번호
+                        # 원본 df에서 실제 행 인덱스 찾기(헤더 포함이므로 +2)
+                        real_row = df.index[filtered_df.index[idx]] + 2
                         worksheet.update_cell(real_row, 2, new_question)
                         worksheet.update_cell(real_row, 3, new_answer)
                         worksheet.update_cell(real_row, 4, new_writer)
@@ -111,7 +118,7 @@ else:
             if col_del.button("🗑️ 삭제", key=f"del_{idx}"):
                 confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                 if st.button("진짜 삭제", key=f"confirm_del_{idx}"):
-                    real_row = idx + 2
+                    real_row = df.index[filtered_df.index[idx]] + 2
                     worksheet.delete_rows(real_row)
                     st.success("✅ 삭제가 완료되었습니다.")
                     st.experimental_rerun()
