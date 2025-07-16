@@ -26,6 +26,31 @@ def get_worksheet():
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
 
+#다크모드라이트모드적용
+st.markdown("""
+<style>
+/* 다크모드/라이트모드 자동 전환 CSS */
+@media (prefers-color-scheme: dark) {
+    .stApp {
+        background-color: #1A1A1A !important;   /* 다크 배경 */
+        color: #eee !important;                /* 다크 글씨 */
+    }
+    html, body, .stTextInput>div>div>input, .stTextArea>div>textarea,
+    .stForm, .stMarkdown, .stSubheader, .stHeader {
+        background-color: #222 !important;
+        color: #fff !important;
+    }
+}
+/* 라이트모드 */
+@media (prefers-color-scheme: light) {
+    .stApp {
+        background-color: #fff !important;    /* 흰 배경 */
+        color: #222 !important;               /* 검은 글씨 */
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ========== 상단 캐릭터 인사문구 (반응형) ==========
 st.markdown("""
 <style>
@@ -185,6 +210,9 @@ if search_used:
 else:
     st.info("검색 조건(질문/답변 키워드 또는 작성자 이름)을 입력하시면 결과가 표시됩니다.")
 
-# 최근 5개 미리보기(이 부분은 필요 없으시면 주석처리해도 됩니다)
 st.markdown("#### 🗂️ 최근 5개 질문 미리보기")
-# st.dataframe(df[["작성자", "질문"]].tail(5))
+if not df.empty and "작성자" in df.columns and "질문" in df.columns:
+    for idx, row in df[["작성자", "질문"]].tail(5).iterrows():
+        st.markdown(f"- **{row['작성자']}**: {row['질문']}")
+else:
+    st.info("최근 질문 데이터가 없습니다. (컬럼명 또는 데이터 확인 필요)")
