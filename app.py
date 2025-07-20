@@ -83,8 +83,8 @@ else:
 # ========== Q&A 등록 폼 ==========
 st.markdown("### 📋 영업가족 질의응답 등록")
 
-manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
-question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
+manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림", key="input_manager")
+question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?", key="input_question")
 
 existing_questions = df["질문"].tolist()
 if question.strip():
@@ -98,7 +98,7 @@ if question.strip():
             "\n".join(f"- {q}" for q in similar_qs[:3])
         )
 
-answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
+answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer")
 
 if st.button("✅ 시트에 등록하기"):
     existing_questions = [q.strip() for q in df["질문"].tolist()]
@@ -119,13 +119,13 @@ if st.button("✅ 시트에 등록하기"):
                 str(today)
             ])
             st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
+            # 입력값 초기화
             st.session_state["input_manager"] = ""
             st.session_state["input_question"] = ""
             st.session_state["input_answer"] = ""
             st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
-
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
