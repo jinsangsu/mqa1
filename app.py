@@ -85,6 +85,19 @@ st.markdown("### 📋 영업가족 질의응답 등록")
 with st.form("qna_form", clear_on_submit=True):
     manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
     question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
+
+    existing_questions = df["질문"].tolist()
+    if question.strip():
+        similar_qs = [
+            q for q in existing_questions
+            if difflib.SequenceMatcher(None, question.strip(), q.strip()).ratio() >= 0.8
+        ]
+        if similar_qs:
+            st.info(
+                "⚠️ 이미 등록된 유사 질문이 있습니다:\n\n" +
+                "\n".join(f"- {q}" for q in similar_qs[:3])
+            )
+    
     answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
     submitted = st.form_submit_button("✅ 시트에 등록하기")
 
