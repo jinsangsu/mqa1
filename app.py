@@ -93,7 +93,6 @@ if submitted:
     if is_duplicate_question(question, existing_questions):
         st.warning("⚠ 이미 유사한 질문이 등록되어 있습니다. 다시 확인해주세요.")
     else:
-        # 새 번호(가장 큰 번호+1, 데이터가 없으면 1)
         if len(df) == 0:
             new_no = 1
         else:
@@ -115,7 +114,6 @@ if submitted:
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
-# ======= 복합검색: 키워드 + 작성자 이름 =======
 search_query = st.text_input("질문/답변 내용 키워드로 검색", "")
 search_writer = st.text_input("작성자 이름으로 검색", "")
 
@@ -130,8 +128,8 @@ if search_writer.strip():
         filtered_df["작성자"].str.contains(search_writer, case=False, na=False)
     ]
 
-# --- [중요!] 수정 중인 번호(행)를 세션상태에 저장 ---
 edit_num = st.session_state.get("edit_num", None)
+delete_num = st.session_state.get("delete_num", None)
 
 if search_query.strip() or search_writer.strip():
     if filtered_df.empty:
@@ -142,7 +140,8 @@ if search_query.strip() or search_writer.strip():
             with st.expander(f"질문: {row['질문']} | 작성자: {row['작성자']} | 날짜: {row['작성일']}"):
                 st.write(f"**답변:** {row['답변']}")
                 col_edit, col_del = st.columns([1, 1])
-                # ----------- 수정 폼 (세션상태 edit_num과 매칭되는 행만 열림) -----------
+
+                # ----------- 수정 -----------
                 if edit_num == row["번호"]:
                     with st.form(f"edit_form_{row['번호']}"):
                         new_question = st.text_area("질문 내용", value=row["질문"])
@@ -151,7 +150,7 @@ if search_query.strip() or search_writer.strip():
                         submitted_edit = st.form_submit_button(f"저장_{row['번호']}")
                         if submitted_edit:
                             try:
-                                번호_셀 = worksheet.find(str(row["번호"]))  # 번호 위치 찾기
+                                번호_셀 = worksheet.find(str(row["번호"]))
                                 행번호 = 번호_셀.row
                                 worksheet.update_cell(행번호, 2, str(new_question))
                                 worksheet.update_cell(행번호, 3, str(new_answer))
@@ -162,36 +161,40 @@ if search_query.strip() or search_writer.strip():
                             except Exception as e:
                                 st.error(f"수정 중 에러 발생: {e}")
                 else:
-                    # 수정 버튼(폼이 열려있지 않은 상태)
                     if col_edit.button(f"✏️ 수정_{row['번호']}", key=f"edit_{row['번호']}"):
                         st.session_state["edit_num"] = row["번호"]
                         st.rerun()
+
                 # ----------- 삭제 -----------
                 if delete_num == row["번호"]:
-                   st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
-                   col_confirm, col_cancel = st.columns([1, 1])
-                   with col_confirm:
-                       if st.button(f"진짜 삭제_{row['번호']}", key=f"confirm_del_{row['번호']}"):
-    try:
-        번호_셀 = worksheet.find(str(row["번호"]))
-        행번호 = 번호_셀.row
-        worksheet.delete_rows(행번호)
-        st.success("✅ 삭제가 완료되었습니다.")
-        del st.session_state["delete_num"]
-        st.rerun()
-    except Exception as e:
-        st.error(f"삭제 중 에러 발생: {e}")
+                    st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
+                    col_confirm, col_cancel = st.columns([1, 1])
+                    with col_confirm:
+                        if st.button(f"진짜 삭제_{row['번호']}", key=f"confirm_del_{row['번호']}"):
+                            try:
+                                번호_셀 = worksheet.find(str(row["번호"]))
+                                행번호 = 번호_셀.row
+                                worksheet.delete_rows(행번호)
+                                st.success("✅ 삭제가 완료되었습니다.")
+                                del st.session_state["delete_num"]
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"삭제 중 에러 발생: {e}")
+                    with col_cancel:
+                        if st.button(f"취소_{row['번호']}", key=f"cancel_del_{row['번호']}"):
+                            del st.session_state["delete_num"]
+                            st.rerun()
                 else:
-                      if col_del.button(f"🗂️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
+                    if col_del.button(f"🗂️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
                         st.session_state["delete_num"] = row["번호"]
                         st.rerun()
 else:
     st.info("검색 조건(질문/답변 키워드 또는 작성자 이름)을 입력하시면 결과가 표시됩니다.")
 
-# ====== 최근 5개 질문 미리보기 ======
 st.markdown("#### 🗂️ 최근 5개 질문 미리보기")
 if not df.empty and "작성자" in df.columns and "질문" in df.columns:
     for idx, row in df[["작성자", "질문"]].tail(5).iterrows():
         st.markdown(f"- **{row['작성자']}**: {row['질문']}")
 else:
     st.info("최근 질문 데이터가 없습니다. (컬럼명 또는 데이터 확인 필요)")
+
