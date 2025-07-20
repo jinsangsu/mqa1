@@ -1,3 +1,4 @@
+
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
@@ -25,6 +26,50 @@ def get_worksheet():
     spreadsheet = gc.open_by_url(spreadsheet_url)
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
+
+# ====== 디자인 및 인삿말 ======
+st.markdown("""
+<style>
+@media (prefers-color-scheme: dark) {
+    .stApp { background-color: #1A1A1A !important; color: #eee !important; }
+    html, body, .stTextInput>div>div>input, .stTextArea>div>textarea,
+    .stForm, .stMarkdown, .stSubheader, .stHeader {
+        background-color: #222 !important; color: #fff !important;
+    }
+}
+@media (prefers-color-scheme: light) {
+    .stApp { background-color: #fff !important; color: #222 !important; }
+}
+.stApp, .title-text, .element-container, .block-container, .stColumn, .stContainer, .stMarkdown, div[role="list"], hr {
+    margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important;
+}
+.intro-container { margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important; }
+.stColumns { gap: 8px !important; margin-top: 0px !important; margin-bottom: 0px !important; }
+.stForm, .stTextInput, .stTextArea, .stButton, .stMarkdown, .stSubheader, .stHeader { margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 2px !important; padding-bottom: 2px !important; }
+hr { margin-top: 2px !important; margin-bottom: 2px !important; }
+@media screen and (max-width: 768px) {
+    .intro-container { flex-direction: column !important; align-items: center !important; }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ------- 상단 캐릭터+인사말 -------
+container = st.container()
+with container:
+    cols = st.columns([1, 4])
+    with cols[0]:
+        st.image("title_image.png", width=130)
+    with cols[1]:
+        st.markdown("""
+        <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
+            <p><strong>안녕하세요.</strong></p>
+            <p>항상 현장에서 최선을 다해주시는 <strong>충청호남본부 임직원 여러분께 깊이 감사드립니다.</strong></p>
+            <p>이번에 설계사분들의 반복 질문에 신속하게 대응하고 지점의 운영 효율을 높이기 위해 <strong>Q&A 시스템</strong>을 준비했습니다.</p>
+            <p>현장에서 자주 반복되는 질문과 그에 대한 명확한 답변을 등록해주시면, 설계사분들이 스스로 찾아보는 데 큰 도움이 될 것입니다.</p>
+            <p>바쁘시겠지만 <strong>하루에 하나씩</strong>만이라도 참여해 주신다면 우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
+            <p>감사합니다.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ====== 데이터 불러오기 ======
 worksheet = get_worksheet()
@@ -97,7 +142,6 @@ if search_query.strip() or search_writer.strip():
                         submitted_edit = st.form_submit_button(f"저장_{row['번호']}")
                         if submitted_edit:
                             try:
-                                # 실제 시트에서 데이터 행 번호 = 번호 + 1 (1행은 헤더)
                                 worksheet.update_cell(int(row["번호"])+1, 2, new_question)
                                 worksheet.update_cell(int(row["번호"])+1, 3, new_answer)
                                 worksheet.update_cell(int(row["번호"])+1, 4, new_writer)
