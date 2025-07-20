@@ -141,13 +141,13 @@ if search_query.strip() or search_writer.strip():
                             worksheet.update_cell(row["rowid"], 2, new_question)
                             worksheet.update_cell(row["rowid"], 3, new_answer)
                             worksheet.update_cell(row["rowid"], 4, new_writer)
+                         
+                            st.success("✅ 수정이 완료되었습니다.")
+                            st.experimental_rerun()
                          except Exception as e:
                             st.error(f"에러 발생: {e}")
-                            st.success("✅ 수정이 완료되었습니다.")
-
-                            data = worksheet.get_all_values()
-                            st.experimental_rerun()
-                # ----------- 삭제 -----------
+                            
+                                            # ----------- 삭제 -----------
                 if col_del.button("🗑️ 삭제", key=f"del_{idx}"):
                     confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                     if st.button("진짜 삭제", key=f"confirm_del_{idx}"):
