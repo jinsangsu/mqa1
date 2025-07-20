@@ -81,6 +81,15 @@ else:
     st.error("시트에 '번호' 컬럼이 없습니다. 시트 구조를 확인하세요.")
 
 # ========== Q&A 등록 폼 ==========
+if 'reset' not in st.session_state:
+    st.session_state['reset'] = False
+
+if st.session_state['reset']:
+    st.session_state['input_manager'] = ""
+    st.session_state['input_question'] = ""
+    st.session_state['input_answer'] = ""
+    st.session_state['reset'] = False
+
 st.markdown("### 📋 영업가족 질의응답 등록")
 
 manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림", key="input_manager")
@@ -119,14 +128,10 @@ if st.button("✅ 시트에 등록하기"):
                 str(today)
             ])
             st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-            # 입력값 초기화
-            st.session_state["input_manager"] = ""
-            st.session_state["input_question"] = ""
-            st.session_state["input_answer"] = ""
+            st.session_state['reset'] = True   # << 이 한 줄만 변경!
             st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
-
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
