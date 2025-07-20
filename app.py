@@ -101,8 +101,7 @@ st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
 # ======= 데이터프레임 준비 및 시트 행번호 매핑 =======
 df = pd.DataFrame(data[1:], columns=data[0])
-df.reset_index(drop=True, inplace=True)
-row_numbers = list(range(2, 2 + len(df)))  # 실제 시트의 행 번호(2~)
+df["rowid"] = range(2, 2 + len(df))  # 2번 행부터 실제 시트 rowid 부여
 
 # ======= 복합검색: 키워드 + 작성자 이름 =======
 search_query = st.text_input("질문/답변 내용 키워드로 검색", "")
@@ -137,10 +136,11 @@ if search_query.strip() or search_writer.strip():
                         new_answer = st.text_area("답변 내용", value=row["답변"])
                         new_writer = st.text_input("작성자", value=row["작성자"])
                         if st.form_submit_button("저장"):
-                            real_row = row_numbers[row['index']]  # index는 원본 행번호
-                            worksheet.update_cell(real_row, 2, new_question)
-                            worksheet.update_cell(real_row, 3, new_answer)
-                            worksheet.update_cell(real_row, 4, new_writer)
+                            
+                            worksheet.update_cell(row["rowid"], 2, new_question)
+                            worksheet.update_cell(row["rowid"], 3, new_answer)
+                            worksheet.update_cell(row["rowid"], 4, new_writer)
+
                             st.success("✅ 수정이 완료되었습니다.")
                             data = worksheet.get_all_values()
                             st.experimental_rerun()
@@ -148,8 +148,8 @@ if search_query.strip() or search_writer.strip():
                 if col_del.button("🗑️ 삭제", key=f"del_{idx}"):
                     confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                     if st.button("진짜 삭제", key=f"confirm_del_{idx}"):
-                        real_row = row_numbers[row['index']]
-                        worksheet.delete_rows(real_row)
+                        
+                        worksheet.delete_rows(row["rowid"])
                         st.success("✅ 삭제가 완료되었습니다.")
                         data = worksheet.get_all_values()
                         st.experimental_rerun()
