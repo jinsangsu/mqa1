@@ -130,6 +130,9 @@ if search_writer.strip():
         filtered_df["작성자"].str.contains(search_writer, case=False, na=False)
     ]
 
+# --- [중요!] 수정 중인 번호(행)를 세션상태에 저장 ---
+edit_num = st.session_state.get("edit_num", None)
+
 if search_query.strip() or search_writer.strip():
     if filtered_df.empty:
         st.info("검색 결과가 없습니다.")
@@ -139,8 +142,8 @@ if search_query.strip() or search_writer.strip():
             with st.expander(f"질문: {row['질문']} | 작성자: {row['작성자']} | 날짜: {row['작성일']}"):
                 st.write(f"**답변:** {row['답변']}")
                 col_edit, col_del = st.columns([1, 1])
-                # ----------- 수정 -----------
-                if col_edit.button(f"✏️ 수정_{row['번호']}", key=f"edit_{row['번호']}"):
+                # ----------- 수정 폼 (세션상태 edit_num과 매칭되는 행만 열림) -----------
+                if edit_num == row["번호"]:
                     with st.form(f"edit_form_{row['번호']}"):
                         new_question = st.text_area("질문 내용", value=row["질문"])
                         new_answer = st.text_area("답변 내용", value=row["답변"])
@@ -148,15 +151,21 @@ if search_query.strip() or search_writer.strip():
                         submitted_edit = st.form_submit_button(f"저장_{row['번호']}")
                         if submitted_edit:
                             try:
-                                번호_셀 = worksheet.find(str(row["번호"]))  # '번호'와 일치하는 셀 위치 찾기
+                                번호_셀 = worksheet.find(str(row["번호"]))  # 번호 위치 찾기
                                 행번호 = 번호_셀.row
                                 worksheet.update_cell(행번호, 2, str(new_question))
                                 worksheet.update_cell(행번호, 3, str(new_answer))
                                 worksheet.update_cell(행번호, 4, str(new_writer))
                                 st.success("✅ 수정이 완료되었습니다.")
+                                del st.session_state["edit_num"]
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"수정 중 에러 발생: {e}")
+                else:
+                    # 수정 버튼(폼이 열려있지 않은 상태)
+                    if col_edit.button(f"✏️ 수정_{row['번호']}", key=f"edit_{row['번호']}"):
+                        st.session_state["edit_num"] = row["번호"]
+                        st.rerun()
                 # ----------- 삭제 -----------
                 if col_del.button(f"🗑️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
                     confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
