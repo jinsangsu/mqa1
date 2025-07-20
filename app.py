@@ -130,12 +130,12 @@ if search_query.strip() or search_writer.strip():
                 st.write(f"**답변:** {row['답변']}")
                 col_edit, col_del = st.columns([1, 1])
                 # ----------- 수정 -----------
-                if col_edit.button("✏️ 수정", key=f"edit_{idx}"):
-                    with st.form(f"edit_form_{idx}"):
+                if col_edit.button("✏️ 수정", key=f"edit_{idx}_{row['rowid']}"):
+                    with st.form(f"edit_form_{idx}_{row['rowid']}"):
                         new_question = st.text_area("질문 내용", value=row["질문"])
                         new_answer = st.text_area("답변 내용", value=row["답변"])
                         new_writer = st.text_input("작성자", value=row["작성자"])
-                        if st.form_submit_button("저장"):
+                        if st.form_submit_button("저장", key=f"save_{idx}_{row['rowid']}"):
                          st.write("저장 버튼 눌림!")  # 1. 버튼 동작 확인
                          try:    
                             worksheet.update_cell(row["rowid"], 2, new_question)
