@@ -167,7 +167,7 @@ if search_query.strip() or search_writer.strip():
                         st.session_state["edit_num"] = row["번호"]
                         st.rerun()
                 # ----------- 삭제 -----------
-               if delete_num == row["번호"]:
+                if delete_num == row["번호"]:
                    st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                    col_confirm, col_cancel = st.columns([1, 1])
                    with col_confirm:
@@ -185,10 +185,10 @@ if search_query.strip() or search_writer.strip():
                         if st.button(f"취소_{row['번호']}", key=f"cancel_del_{row['번호']}"):
                               del st.session_state["delete_num"]
                               st.rerun()
-else:
-    if st.button(f"🗂️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
-        st.session_state["delete_num"] = row["번호"]
-        st.rerun()
+                else:
+                      if col_del.button(f"🗂️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
+                        st.session_state["delete_num"] = row["번호"]
+                        st.rerun()
 else:
     st.info("검색 조건(질문/답변 키워드 또는 작성자 이름)을 입력하시면 결과가 표시됩니다.")
 
