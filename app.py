@@ -108,7 +108,7 @@ if submitted:
                 str(today)
             ])
             st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-            st.experimental_rerun()
+            st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
 
@@ -153,7 +153,7 @@ if search_query.strip() or search_writer.strip():
                                 worksheet.update_cell(rownum, 3, str(new_answer))
                                 worksheet.update_cell(rownum, 4, str(new_writer))
                                 st.success("✅ 수정이 완료되었습니다.")
-                                st.experimental_rerun()
+                                st.rerun()
                             except Exception as e:
                                 st.error(f"수정 중 에러 발생: {e}")
                 # ----------- 삭제 -----------
@@ -164,7 +164,7 @@ if search_query.strip() or search_writer.strip():
                             rownum = int(row["번호"]) + 1
                             worksheet.delete_rows(rownum)
                             st.success("✅ 삭제가 완료되었습니다.")
-                            st.experimental_rerun()
+                            st.rerun()
                         except Exception as e:
                             st.error(f"삭제 중 에러 발생: {e}")
 else:
