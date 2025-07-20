@@ -135,9 +135,8 @@ if search_query.strip() or search_writer.strip():
                         new_question = st.text_area("질문 내용", value=row["질문"])
                         new_answer = st.text_area("답변 내용", value=row["답변"])
                         new_writer = st.text_input("작성자", value=row["작성자"])
-                        submitted = st.form_submit_button("저장")
-                        if st.form_submit_button("저장"):
-                         st.write("저장 버튼 눌림!")  # 1. 버튼 동작 확인
+                        submitted = st.form_submit_button(f"저장_{idx}_{row['rowid']}")
+                        if submitted:
                          try:    
                             worksheet.update_cell(row["rowid"], 2, new_question)
                             worksheet.update_cell(row["rowid"], 3, new_answer)
