@@ -119,6 +119,9 @@ if st.button("✅ 시트에 등록하기"):
                 str(today)
             ])
             st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
+            st.session_state["input_manager"] = ""
+            st.session_state["input_question"] = ""
+            st.session_state["input_answer"] = ""
             st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
