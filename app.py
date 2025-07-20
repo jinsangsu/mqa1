@@ -136,12 +136,15 @@ if search_query.strip() or search_writer.strip():
                         new_answer = st.text_area("답변 내용", value=row["답변"])
                         new_writer = st.text_input("작성자", value=row["작성자"])
                         if st.form_submit_button("저장"):
-                            
+                         st.write("저장 버튼 눌림!")  # 1. 버튼 동작 확인
+                         try:    
                             worksheet.update_cell(row["rowid"], 2, new_question)
                             worksheet.update_cell(row["rowid"], 3, new_answer)
                             worksheet.update_cell(row["rowid"], 4, new_writer)
-
+                         except Exception as e:
+                            st.error(f"에러 발생: {e}")
                             st.success("✅ 수정이 완료되었습니다.")
+
                             data = worksheet.get_all_values()
                             st.experimental_rerun()
                 # ----------- 삭제 -----------
