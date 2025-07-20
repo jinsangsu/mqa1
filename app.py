@@ -1,4 +1,3 @@
-
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
@@ -13,7 +12,7 @@ def is_duplicate_question(new_question, existing_questions, threshold=0.85):
             return True
     return False
 
-# 🔐 인증
+# 🔐 구글 인증
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = Credentials.from_service_account_info(
     st.secrets["gcp_service_account"],
@@ -100,11 +99,18 @@ if submitted:
         else:
             new_no = df["번호"].max() + 1
         today = datetime.date.today().strftime("%Y-%m-%d")
-        worksheet.append_row([
-            new_no, question, answer, manager_name, today
-        ])
-        st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-        st.experimental_rerun()
+        try:
+            worksheet.append_row([
+                str(new_no),
+                str(question),
+                str(answer),
+                str(manager_name),
+                str(today)
+            ])
+            st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
+            st.experimental_rerun()
+        except Exception as e:
+            st.error(f"등록 중 에러 발생: {e}")
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
@@ -142,23 +148,25 @@ if search_query.strip() or search_writer.strip():
                         submitted_edit = st.form_submit_button(f"저장_{row['번호']}")
                         if submitted_edit:
                             try:
-                                worksheet.update_cell(int(row["번호"])+1, 2, new_question)
-                                worksheet.update_cell(int(row["번호"])+1, 3, new_answer)
-                                worksheet.update_cell(int(row["번호"])+1, 4, new_writer)
+                                rownum = int(row["번호"]) + 1  # 1행(헤더) 감안
+                                worksheet.update_cell(rownum, 2, str(new_question))
+                                worksheet.update_cell(rownum, 3, str(new_answer))
+                                worksheet.update_cell(rownum, 4, str(new_writer))
                                 st.success("✅ 수정이 완료되었습니다.")
                                 st.experimental_rerun()
                             except Exception as e:
-                                st.error(f"에러 발생: {e}")
+                                st.error(f"수정 중 에러 발생: {e}")
                 # ----------- 삭제 -----------
                 if col_del.button(f"🗑️ 삭제_{row['번호']}", key=f"del_{row['번호']}"):
                     confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                     if st.button(f"진짜 삭제_{row['번호']}", key=f"confirm_del_{row['번호']}"):
                         try:
-                            worksheet.delete_rows(int(row["번호"])+1)
+                            rownum = int(row["번호"]) + 1
+                            worksheet.delete_rows(rownum)
                             st.success("✅ 삭제가 완료되었습니다.")
                             st.experimental_rerun()
                         except Exception as e:
-                            st.error(f"에러 발생: {e}")
+                            st.error(f"삭제 중 에러 발생: {e}")
 else:
     st.info("검색 조건(질문/답변 키워드 또는 작성자 이름)을 입력하시면 결과가 표시됩니다.")
 
