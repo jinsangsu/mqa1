@@ -148,10 +148,11 @@ if search_query.strip() or search_writer.strip():
                         submitted_edit = st.form_submit_button(f"저장_{row['번호']}")
                         if submitted_edit:
                             try:
-                                rownum = int(row["번호"]) + 1  # 1행(헤더) 감안
-                                worksheet.update_cell(rownum, 2, str(new_question))
-                                worksheet.update_cell(rownum, 3, str(new_answer))
-                                worksheet.update_cell(rownum, 4, str(new_writer))
+                                번호_셀 = worksheet.find(str(row["번호"]))  # '번호'와 일치하는 셀 위치 찾기
+                                행번호 = 번호_셀.row
+                                worksheet.update_cell(행번호, 2, str(new_question))
+                                worksheet.update_cell(행번호, 3, str(new_answer))
+                                worksheet.update_cell(행번호, 4, str(new_writer))
                                 st.success("✅ 수정이 완료되었습니다.")
                                 st.rerun()
                             except Exception as e:
@@ -161,8 +162,9 @@ if search_query.strip() or search_writer.strip():
                     confirm = st.warning("정말 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.", icon="⚠️")
                     if st.button(f"진짜 삭제_{row['번호']}", key=f"confirm_del_{row['번호']}"):
                         try:
-                            rownum = int(row["번호"]) + 1
-                            worksheet.delete_rows(rownum)
+                            번호_셀 = worksheet.find(str(row["번호"]))
+                            행번호 = 번호_셀.row
+                            worksheet.delete_rows(행번호)
                             st.success("✅ 삭제가 완료되었습니다.")
                             st.rerun()
                         except Exception as e:
