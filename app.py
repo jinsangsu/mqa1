@@ -82,29 +82,28 @@ else:
 
 # ========== Q&A 등록 폼 ==========
 st.markdown("### 📋 영업가족 질의응답 등록")
-with st.form("qna_form", clear_on_submit=True):
-    manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
-    question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
 
-    existing_questions = df["질문"].tolist()
-    if question.strip():
-        similar_qs = [
-            q for q in existing_questions
-            if difflib.SequenceMatcher(None, question.strip(), q.strip()).ratio() >= 0.8
-        ]
-        if similar_qs:
-            st.info(
-                "⚠️ 이미 등록된 유사 질문이 있습니다:\n\n" +
-                "\n".join(f"- {q}" for q in similar_qs[:3])
-            )
-    
-    answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
-    submitted = st.form_submit_button("✅ 시트에 등록하기")
+manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림")
+question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?")
 
-if submitted:
-    existing_questions = df["질문"].tolist()
-    if is_duplicate_question(question, existing_questions):
-        st.warning("⚠ 이미 유사한 질문이 등록되어 있습니다. 다시 확인해주세요.")
+existing_questions = df["질문"].tolist()
+if question.strip():
+    similar_qs = [
+        q for q in existing_questions
+        if difflib.SequenceMatcher(None, question.strip(), q.strip()).ratio() >= 0.8
+    ]
+    if similar_qs:
+        st.info(
+            "⚠️ 이미 등록된 유사 질문이 있습니다:\n\n" +
+            "\n".join(f"- {q}" for q in similar_qs[:3])
+        )
+
+answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...")
+
+if st.button("✅ 시트에 등록하기"):
+    existing_questions = [q.strip() for q in df["질문"].tolist()]
+    if question.strip() and question.strip() in existing_questions:
+        st.warning("⚠ 이미 동일한 질문이 등록되어 있습니다. 다시 확인해주세요.")
     else:
         if len(df) == 0:
             new_no = 1
@@ -123,6 +122,7 @@ if submitted:
             st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
+
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
