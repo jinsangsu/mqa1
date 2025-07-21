@@ -93,7 +93,7 @@ if st.session_state['reset']:
 st.markdown("### 📋 영업가족 질의응답 등록")
 
 manager_name = st.text_input("🧑‍💼 매니저 이름", placeholder="예: 박유림", key="input_manager")
-question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?", key="input_question",height=30)
+question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신청은 어떻게 하나요?", key="input_question", height=50)
 
 existing_questions = df["질문"].tolist()
 if question.strip():
@@ -106,7 +106,7 @@ if question.strip():
             st.info(
                 f"⚠️ 유사질문:\n{row['질문']}\n\n💡 등록된 답변:\n{row['답변']}"
             )
-answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer")
+answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer", height=50)
 
 if st.button("✅ 시트에 등록하기"):
     # 1. 질문/답변 필수값 체크 먼저!
