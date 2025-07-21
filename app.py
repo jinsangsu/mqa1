@@ -97,16 +97,15 @@ question = st.text_area("❓ 질문 내용", placeholder="예: 자동이체 신�
 
 existing_questions = df["질문"].tolist()
 if question.strip():
-    similar_qs = [
-        q for q in existing_questions
-        if difflib.SequenceMatcher(None, question.strip(), q.strip()).ratio() >= 0.8
-    ]
-    if similar_qs:
-        st.info(
-            "⚠️ 이미 등록된 유사 질문이 있습니다:\n\n" +
-            "\n".join(f"- {q}" for q in similar_qs[:3])
-        )
-
+    # 유사질문(70%↑)인 DataFrame의 행 3개까지 뽑기
+    similar_rows = df[
+        df["질문"].apply(lambda q: difflib.SequenceMatcher(None, question.strip(), str(q).strip()).ratio() >= 0.7)
+    ].head(3)
+    if not similar_rows.empty:
+        for _, row in similar_rows.iterrows():
+            st.info(
+                f"⚠️ 유사질문:\n{row['질문']}\n\n💡 등록된 답변:\n{row['답변']}"
+            )
 answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer")
 
 if st.button("✅ 시트에 등록하기"):
@@ -132,6 +131,7 @@ if st.button("✅ 시트에 등록하기"):
             st.rerun()
         except Exception as e:
             st.error(f"등록 중 에러 발생: {e}")
+
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
