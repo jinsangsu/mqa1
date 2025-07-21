@@ -99,7 +99,7 @@ existing_questions = df["질문"].tolist()
 if question.strip():
     # 유사질문(70%↑)인 DataFrame의 행 3개까지 뽑기
     similar_rows = df[
-        df["질문"].apply(lambda q: difflib.SequenceMatcher(None, question.strip(), str(q).strip()).ratio() >= 0.7)
+        df["질문"].apply(lambda q: difflib.SequenceMatcher(None, question.strip(), str(q).strip()).ratio() >= 0.65)
     ].head(3)
     if not similar_rows.empty:
         for _, row in similar_rows.iterrows():
@@ -109,29 +109,32 @@ if question.strip():
 answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer")
 
 if st.button("✅ 시트에 등록하기"):
-    existing_questions = [q.strip() for q in df["질문"].tolist()]
-    if question.strip() and question.strip() in existing_questions:
-        st.warning("⚠ 이미 동일한 질문이 등록되어 있습니다. 다시 확인해주세요.")
+    # 1. 질문/답변 필수값 체크 먼저!
+    if not question.strip() or not answer.strip():
+        st.error("⚠ 질문과 답변은 필수 입력입니다. 반드시 내용을 입력해 주세요.")
     else:
-        if len(df) == 0:
-            new_no = 1
+        existing_questions = [q.strip() for q in df["질문"].tolist()]
+        if question.strip() and question.strip() in existing_questions:
+            st.warning("⚠ 이미 동일한 질문이 등록되어 있습니다. 다시 확인해주세요.")
         else:
-            new_no = df["번호"].max() + 1
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        try:
-            worksheet.append_row([
-                str(new_no),
-                str(question),
-                str(answer),
-                str(manager_name),
-                str(today)
-            ])
-            st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-            st.session_state['reset'] = True   # << 이 한 줄만 변경!
-            st.rerun()
-        except Exception as e:
-            st.error(f"등록 중 에러 발생: {e}")
-
+            if len(df) == 0:
+                new_no = 1
+            else:
+                new_no = df["번호"].max() + 1
+            today = datetime.date.today().strftime("%Y-%m-%d")
+            try:
+                worksheet.append_row([
+                    str(new_no),
+                    str(question),
+                    str(answer),
+                    str(manager_name),
+                    str(today)
+                ])
+                st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
+                st.session_state['reset'] = True
+                st.rerun()
+            except Exception as e:
+                st.error(f"등록 중 에러 발생: {e}")
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
