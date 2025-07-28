@@ -61,7 +61,7 @@ with container:
     with cols[1]:
         st.markdown("""
         <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
-            <p><strong>안녕하세요.</strong></p>
+            <p style="margin-top: 8px;"><strong>안녕하세요.</strong></p>
             <p><strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong></p>
             <p>영업가족분들이 자주하는 질문에 답변하는 <strong>Q&A 시스템</strong>을 준비했습니다.</p>
             <p>반복되는 질문과 답변을 등록해주시면 도움이 될것입니다.</p>
