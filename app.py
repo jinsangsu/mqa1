@@ -73,12 +73,12 @@ with container:
         st.markdown("""
         <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
             <p style="margin-top: 8px;"><strong>안녕하세요.</strong></p>
-            <p><strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</p>
-            <p>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</p>
-            <p> (앱주소 : http://chung2.streamlit.app)</p>
-            <p>영업가족분들이 자주하는 질문들을 등록해주시면</p>
-            <p>우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</p>
-            <p>감사합니다</strong></p>
+            <p><strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong></p>
+            <p><strong>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong></p>
+            <p><strong> (앱주소 : http://chung2.streamlit.app)</strong></p>
+            <p><strong>영업가족분들이 자주하는 질문들을 등록해주시면</strong></p>
+            <p><strong>우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</strong></p>
+            <p><strong>감사합니다</strong></p>
         </div>
         """, unsafe_allow_html=True)
 
