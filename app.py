@@ -40,15 +40,15 @@ st.markdown("""
     .stApp { background-color: #fff !important; color: #222 !important; }
 }
 html, body {
-    padding-top: 1rem !important;
-    margin-top: 1rem !important;
+    padding-top: 1.5rem !important;
+    margin-top: 1.5rem !important;
 }
 .block-container { padding-top: 1rem !important; }
 
 header[data-testid="stHeader"] {
-    padding-top: 1.5rem !important;
-    margin-top: 1.5rem !important;
+    display: none !important;
 }
+
 
 .stApp, .title-text, .element-container, .block-container, .stColumn, .stContainer, .stMarkdown, div[role="list"], hr {
     margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important;
