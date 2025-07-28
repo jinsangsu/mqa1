@@ -4,6 +4,15 @@ from google.oauth2.service_account import Credentials
 import pandas as pd
 import difflib
 import datetime
+import os
+import base64
+
+def get_character_img_base64(img_path):
+    if os.path.exists(img_path):
+        with open(img_path, "rb") as img_file:
+            b64 = base64.b64encode(img_file.read()).decode("utf-8")
+            return f"data:image/webp;base64,{b64}"
+    return None
 
 def is_duplicate_question(new_question, existing_questions, threshold=0.85):
     for q in existing_questions:
@@ -64,28 +73,28 @@ hr { margin-top: 2px !important; margin-bottom: 2px !important; }
 """, unsafe_allow_html=True)
 
 # ------- 상단 캐릭터+인사말 -------
-container = st.container()
-with container:
-    cols = st.columns([1, 4])
-    with cols[0]:
-        st.image("title_image.png", width=130)
-    with cols[1]:
-        st.markdown("""
-        <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
-            <p style="margin-top: 8px;"><strong>안녕하세요.</strong></p>
-            <strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong>
-            <strong>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong>
-            <p><strong>
-    (<a href="http://chung2.streamlit.app" target="_blank" style="color: red; text-decoration: none;">
-        앱주소 : http://chung2.streamlit.app
-    </a>)
-</strong></p>
-            <strong>영업가족분들이 자주하는 질문들을 등록해주시면</strong>
-            <strong>우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</strong>
-            <strong>감사합니다!!</strong>
-        </div>
-        """, unsafe_allow_html=True)
+char_img = get_character_img_base64("title_image.png")
 
+intro_html = f"""
+<div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 1rem;">
+  <img src="{char_img}" width="85" style="border-radius:16px; border:1px solid #eee;">
+  <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
+    <p style="margin-top: 0;"><strong>안녕하세요.</strong></p>
+    <p><strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong></p>
+    <p><strong>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong></p>
+    <p><strong>
+      (<a href="http://chung2.streamlit.app" target="_blank" style="color: red; text-decoration: none;">
+        앱주소 : http://chung2.streamlit.app
+      </a>)
+    </strong></p>
+    <p><strong>영업가족분들이 자주하는 질문들을 등록해주시면</strong></p>
+    <p><strong>우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</strong></p>
+    <p><strong>감사합니다!</strong></p>
+  </div>
+</div>
+"""
+
+st.markdown(intro_html, unsafe_allow_html=True)
 # ====== 데이터 불러오기 ======
 worksheet = get_worksheet()
 data = worksheet.get_all_values()
