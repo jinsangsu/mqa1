@@ -73,8 +73,8 @@ with container:
         st.markdown("""
         <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
             <p style="margin-top: 8px;"><strong>안녕하세요.</strong></p>
-            <p><strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong></p>
-            <p><strong>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong></p>
+            <strong>항상 현장에서 최선을 다해주셔서 깊이 감사드립니다.</strong>
+            <strong>영업가족분들이 자주하는 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong>
             <p><strong>
     (<a href="http://chung2.streamlit.app" target="_blank" style="color: red; text-decoration: none;">
         앱주소 : http://chung2.streamlit.app
