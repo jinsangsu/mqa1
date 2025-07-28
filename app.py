@@ -80,8 +80,8 @@ intro_html = f"""
   <img src="{char_img}" width="85" style="border-radius:16px; border:1px solid #eee;">
   <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
     <p style="margin-top: 0;"><strong>안녕하세요.</strong></p>
-    <strong>항상 최선을 다해주셔서 감사드려요~</strong>
-    <strong>이번에 영업가족들의 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong>
+    <strong>현장에서 항상 최선을 다해주셔서 감사드립니다. 꾸벅~</strong>
+    <br><strong>이번에 영업가족 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong></br>
     <br><strong>
       (<a href="http://chung2.streamlit.app" target="_blank" style="color: red; text-decoration: none;">
         앱주소 : http://chung2.streamlit.app
