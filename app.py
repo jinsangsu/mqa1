@@ -42,6 +42,10 @@ st.markdown("""
 .stApp, .title-text, .element-container, .block-container, .stColumn, .stContainer, .stMarkdown, div[role="list"], hr {
     margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important;
 }
+html, body {
+    padding-top: 1rem !important;
+    margin-top: 1rem !important;
+}
 .block-container { padding-top: 1rem !important; }
 .intro-container { margin-top: 0px !important; margin-bottom: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important; }
 .stColumns { gap: 8px !important; margin-top: 0px !important; margin-bottom: 0px !important; }
