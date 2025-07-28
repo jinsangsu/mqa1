@@ -80,9 +80,9 @@ with container:
         앱주소 : http://chung2.streamlit.app
     </a>)
 </strong></p>
-            <p><strong>영업가족분들이 자주하는 질문들을 등록해주시면</strong></p>
+            <strong>영업가족분들이 자주하는 질문들을 등록해주시면</strong>
             <strong>우리 충청호남본부의 변화와 성장에 큰 기여가 될 것입니다.</strong>
-            <strong>감사합니다</strong>
+            <br><strong>감사합니다</strong></br>
         </div>
         """, unsafe_allow_html=True)
 
