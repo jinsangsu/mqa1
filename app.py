@@ -87,8 +87,8 @@ intro_html = f"""
         앱주소 : http://chung2.streamlit.app
       </a>)
     </strong></p>
-    <strong>영업가족들이 자주하는 질문을 등록해주시면</strong>
-    <strong>우리 본부의 변화와 성장에 많은 도움이 될것입니다.</strong>
+    <strong>주요 질문과 답변을 등록해주시면</strong>
+    <strong>업무에 많은 도움이 될것입니다.</strong>
     <strong>감사합니다!</strong>
   </div>
 </div>
