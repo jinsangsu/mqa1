@@ -79,23 +79,22 @@ intro_html = f"""
 <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 1rem;">
   <img src="{char_img}" width="85" style="border-radius:16px; border:1px solid #eee;">
   <div style="font-size: 15px; line-height: 1.6; font-weight: 500; color: #222;">
-    <style="margin-top: 0;"><strong>안녕하세요.</strong>
+    <p style="margin-top: 0;"><strong>안녕하세요.</strong></p>
     <strong>항상 최선을 다해주셔서 감사드려요~</strong>
     <strong>이번에 영업가족들의 질문에 답변하는 Q&A 시스템을 준비했습니다.</strong>
-    <p><strong>
+    <strong>
       (<a href="http://chung2.streamlit.app" target="_blank" style="color: red; text-decoration: none;">
         앱주소 : http://chung2.streamlit.app
       </a>)
-    </strong></p>
+    </strong>
     <strong>자주하는 질문과 답변을 등록해주시면</strong>
-    <strong>앞으로 업무에 많은 도움이 될것입니다.</strong>
+    <strong>업무에 많은 도움이 될것입니다.</strong>
     <strong>잘 부탁드립니다!</strong>
   </div>
 </div>
 """
 
-st.markdown(intro_html, unsafe_allow_html=True)
-# ====== 데이터 불러오기 ======
+st.markdown(intro_html, unsafe_allow_html=True)# ====== 데이터 불러오기 ======
 worksheet = get_worksheet()
 data = worksheet.get_all_values()
 df = pd.DataFrame(data[1:], columns=data[0])
