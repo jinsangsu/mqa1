@@ -6,10 +6,6 @@ import difflib
 import datetime
 import os
 import base64
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-import io
-
 
 def get_character_img_base64(img_path):
     if os.path.exists(img_path):
@@ -39,33 +35,6 @@ def get_worksheet():
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
 
-def _get_drive_service():
-    # 기존 Credentials를 재사용해 Drive 클라이언트 생성
-    return build("drive", "v3", credentials=credentials)
-
-def upload_to_drive_and_get_link(file_bytes: bytes, filename: str, mime_type: str | None = None) -> str:
-    """
-    1) 파일을 구글드라이브에 업로드
-    2) '링크가 있는 모든 사용자 보기' 권한 부여
-    3) 직접보기 링크(uc?export=view&id=...) 반환
-    """
-    service = _get_drive_service()
-    media = MediaIoBaseUpload(io.BytesIO(file_bytes),
-                              mimetype=(mime_type or "application/octet-stream"),
-                              resumable=False)
-    meta = {"name": filename}
-    created = service.files().create(body=meta, media_body=media, fields="id").execute()
-    file_id = created["id"]
-
-    # 공개 읽기 권한 부여
-    service.permissions().create(
-        fileId=file_id,
-        body={"role": "reader", "type": "anyone"}
-    ).execute()
-
-    # 직접보기 링크 (이미지/문서 모두 표시·다운로드 가능)
-    direct_url = f"https://drive.google.com/uc?export=view&id={file_id}"
-    return direct_url
 # ====== 디자인 및 인삿말 ======
 st.markdown("""
 <style>
@@ -162,10 +131,7 @@ if question.strip():
                 f"⚠️ 유사질문:\n{row['질문']}\n\n💡 등록된 답변:\n{row['답변']}"
             )
 answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer", height=50)
-uploaded_file = st.file_uploader(
-    "📎 사진/파일 업로드 (선택)",
-    type=["jpg","jpeg","png","webp","gif","pdf","doc","docx"]
-)
+
 if st.button("✅ 시트에 등록하기"):
     # 1. 질문/답변 필수값 체크 먼저!
     if not question.strip() or not answer.strip():
@@ -181,23 +147,13 @@ if st.button("✅ 시트에 등록하기"):
                 new_no = df["번호"].max() + 1
             today = datetime.date.today().strftime("%Y-%m-%d")
             try:
-                image_url = ""
-                if uploaded_file is not None:
-                    file_bytes = uploaded_file.read()
-                    filename   = uploaded_file.name
-    # 간단 MIME(필요시 mimetypes 사용 가능)
-                    mime_type  = None
-                    image_url  = upload_to_drive_and_get_link(file_bytes, filename, mime_type)
-
                 worksheet.append_row([
                     str(new_no),
                     str(question),
                     str(answer),
                     str(manager_name),
-                    str(today),
-                    str(image_url)  # ← 새로 추가된 '이미지URL' 열
+                    str(today)
                 ])
-
                 st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
                 st.session_state['reset'] = True
                 st.rerun()
