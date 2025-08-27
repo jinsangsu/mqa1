@@ -6,6 +6,10 @@ import difflib
 import datetime
 import os
 import base64
+import io, json
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+
 
 def get_character_img_base64(img_path):
     if os.path.exists(img_path):
@@ -29,6 +33,62 @@ credentials = Credentials.from_service_account_info(
 )
 gc = gspread.authorize(credentials)
 
+DRIVE_SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
+def _get_drive_creds():
+    info = st.secrets["gcp_service_account"]
+    if isinstance(info, str):
+        info = json.loads(info)
+    return Credentials.from_service_account_info(info, scopes=DRIVE_SCOPES)
+
+@st.cache_resource(show_spinner=False)
+def get_drive_client():
+    return build("drive", "v3", credentials=_get_drive_creds())
+
+DRIVE_UPLOAD_FOLDER_ID = st.secrets.get("drive_upload_folder_id", "")
+DRIVE_LINK_SHARING     = st.secrets.get("drive_link_sharing", "anyone")  # anyone | domain
+
+def _image_embed_url(file_id: str) -> str:
+    return f"https://drive.google.com/uc?export=view&id={file_id}"
+
+def _pdf_preview_url(file_id: str) -> str:
+    return f"https://drive.google.com/file/d/{file_id}/preview"
+
+def upload_to_drive(uploaded_file) -> dict:
+    """Streamlit UploadedFile → Drive 업로드 + 링크공개. 임베드/미리보기 URL까지 생성."""
+    drive = get_drive_client()
+    file_bytes = uploaded_file.getvalue()
+    mime = getattr(uploaded_file, "type", None) or "application/octet-stream"
+
+    media = MediaIoBaseUpload(io.BytesIO(file_bytes), mimetype=mime, resumable=True)
+    meta = {"name": uploaded_file.name, "parents": [DRIVE_UPLOAD_FOLDER_ID], "mimeType": mime}
+    f = drive.files().create(
+        body=meta, media_body=media,
+        fields="id,name,mimeType,webViewLink,iconLink",
+        supportsAllDrives=True,
+    ).execute()
+
+    # 공개/도메인 권한 부여
+    perm_body = {"role": "reader", "type": "anyone" if DRIVE_LINK_SHARING=="anyone" else "domain"}
+    if DRIVE_LINK_SHARING == "domain":
+        perm_body.update({"domain": "kbinsure.co.kr", "allowFileDiscovery": False})
+    drive.permissions().create(fileId=f["id"], body=perm_body, supportsAllDrives=True).execute()
+
+    is_image = f["mimeType"].startswith("image/")
+    return {
+        "id": f["id"],
+        "name": f["name"],
+        "mime": f["mimeType"],
+        "view_url": f["webViewLink"],                       # 새탭 열람
+        "embed_url": _image_embed_url(f["id"]) if is_image  # 이미지 미리보기
+                     else (_pdf_preview_url(f["id"]) if f["mimeType"]=="application/pdf" else f["webViewLink"]),
+        "is_image": is_image,
+        "icon": f.get("iconLink"),
+    }
 def get_worksheet():
     spreadsheet_url = "https://docs.google.com/spreadsheets/d/1aPo40QnxQrcY7yEUM6iHa-9XJU-MIIqsjapGP7UnKIo/edit"
     spreadsheet = gc.open_by_url(spreadsheet_url)
@@ -98,6 +158,14 @@ st.markdown(intro_html, unsafe_allow_html=True)# ====== 데이터 불러오기 =
 worksheet = get_worksheet()
 data = worksheet.get_all_values()
 df = pd.DataFrame(data[1:], columns=data[0])
+# '첨부_JSON' 헤더 자동 보정
+if "첨부_JSON" not in df.columns:
+    try:
+        worksheet.update_cell(1, len(df.columns)+1, "첨부_JSON")
+        data = worksheet.get_all_values()
+        df = pd.DataFrame(data[1:], columns=data[0])  # 헤더 갱신
+    except Exception as e:
+        st.error(f"'첨부_JSON' 헤더 추가 중 오류: {e}")
 
 if "번호" in df.columns:
     df["번호"] = df["번호"].astype(int)
@@ -131,6 +199,12 @@ if question.strip():
                 f"⚠️ 유사질문:\n{row['질문']}\n\n💡 등록된 답변:\n{row['답변']}"
             )
 answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer", height=50)
+uploaded_files = st.file_uploader(
+    "📎 이미지/파일 첨부 (이미지, PDF, Office 문서)",
+    accept_multiple_files=True,
+    type=["png","jpg","jpeg","webp","pdf","ppt","pptx","xls","xlsx","doc","docx"],
+    help="이미지·PDF는 설계사 화면에서 미리보기가 가능합니다.",
+)
 
 if st.button("✅ 시트에 등록하기"):
     # 1. 질문/답변 필수값 체크 먼저!
@@ -138,27 +212,61 @@ if st.button("✅ 시트에 등록하기"):
         st.error("⚠ 질문과 답변은 필수 입력입니다. 반드시 내용을 입력해 주세요.")
     else:
         existing_questions = [q.strip() for q in df["질문"].tolist()]
-        if question.strip() and question.strip() in existing_questions:
-            st.warning("⚠ 이미 동일한 질문이 등록되어 있습니다. 다시 확인해주세요.")
+
+        is_near_duplicate = any(
+        difflib.SequenceMatcher(None, question.strip(), q).ratio() >= 0.9
+        for q in existing_questions
+        )
+
+        if question.strip() and is_near_duplicate:
+            st.warning("⚠ 매니저님 감사합니다. 그런데 이미 유사한 질문이 등록되어 있네요.")
+
+            similar_list = sorted(
+                (
+                    (q, difflib.SequenceMatcher(None, question.strip(), q).ratio())
+                    for q in existing_questions
+                ),
+                key=lambda x: x[1],
+                reverse=True
+            )[:3]
+
+            for q, r in similar_list:
+                st.info(f"• 유사도 {r:.0%} → {q}")
         else:
             if len(df) == 0:
                 new_no = 1
             else:
                 new_no = df["번호"].max() + 1
             today = datetime.date.today().strftime("%Y-%m-%d")
+
             try:
+                # ✅ 파일 업로드는 try문 안, 버튼 클릭 내부에서 실행되어야 합니다.
+                attachments = []
+                if uploaded_files:
+                    for uf in uploaded_files:
+                        try:
+                            attachments.append(upload_to_drive(uf))
+                        except Exception as e:
+                            st.error(f"첨부 업로드 실패: {uf.name} — {e}")
+
+                attachments_json = json.dumps(attachments, ensure_ascii=False)
+
                 worksheet.append_row([
                     str(new_no),
                     str(question),
                     str(answer),
                     str(manager_name),
-                    str(today)
+                    str(today),
+                    attachments_json,   # ← 6번째 컬럼: 첨부_JSON
                 ])
+
                 st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
                 st.session_state['reset'] = True
                 st.rerun()
+
             except Exception as e:
                 st.error(f"등록 중 에러 발생: {e}")
+
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
 
