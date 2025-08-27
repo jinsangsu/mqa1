@@ -10,9 +10,6 @@ import io, json
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
-sa_email = st.secrets["gcp_service_account"]["client_email"]
-st.info(f"현재 앱이 사용하는 서비스계정: {sa_email}")
-
 
 def get_character_img_base64(img_path):
     if os.path.exists(img_path):
@@ -93,11 +90,15 @@ def upload_to_drive(uploaded_file) -> dict:
         "icon": f.get("iconLink"),
     }
 def get_worksheet():
-    spreadsheet_url = "https://docs.google.com/spreadsheets/d/1aPo40QnxQrcY7yEUM6iHa-9XJU-MIIqsjapGP7UnKIo/edit"
-    spreadsheet = gc.open_by_url(spreadsheet_url)
+    # secrets.toml → [google].qa_sheet_key 읽기
+    sheet_key = (st.secrets.get("google", {}) or {}).get("qa_sheet_key")
+    if not sheet_key:
+        st.error("secrets에 [google].qa_sheet_key가 없습니다.")
+        st.stop()
+
+    spreadsheet = gc.open_by_key(sheet_key)
     worksheet = spreadsheet.get_worksheet(0)
     return worksheet
-
 # ====== 디자인 및 인삿말 ======
 st.markdown("""
 <style>
