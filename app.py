@@ -10,6 +10,9 @@ import io, json
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
+sa_email = st.secrets["gcp_service_account"]["client_email"]
+st.info(f"현재 앱이 사용하는 서비스계정: {sa_email}")
+
 
 def get_character_img_base64(img_path):
     if os.path.exists(img_path):
