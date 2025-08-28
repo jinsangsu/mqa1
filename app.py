@@ -310,15 +310,55 @@ if question.strip():
             st.info(
                 f"⚠️ 유사질문:\n{row['질문']}\n\n💡 등록된 답변:\n{row['답변']}"
             )
-answer = st.text_area("💡 답변 내용", placeholder="예: KB홈페이지에서 신청 가능합니다...", key="input_answer", height=50)
+answer = st.text_area("💡 답변 내용", placeholder="예: 사장님, 계약>입출금>(공통)결제방법>자동이체 계좌신청에서 ...", key="input_answer", height=50)
+st.markdown("""
+<style>
+/* 이 업로더(#qa-uploader) 안에서만 문구 교체 */
+#qa-uploader [data-testid="stFileUploaderDropzone"] { --label:"여기에 파일을 끌어다 놓으세요"; --btn:"파일 선택"; }
+
+/* Drop 안내 문구 교체 */
+#qa-uploader [data-testid="stFileUploaderDropzone"] div:first-child > div:nth-child(1){
+  position: relative;
+}
+#qa-uploader [data-testid="stFileUploaderDropzone"] div:first-child > div:nth-child(1) *{
+  opacity: 0 !important;            /* 기존 텍스트/아이콘 숨김 */
+}
+#qa-uploader [data-testid="stFileUploaderDropzone"] div:first-child > div:nth-child(1)::after{
+  content: var(--label);
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
+  color: inherit;
+}
+
+/* 'Browse files' 버튼 문구 교체 */
+#qa-uploader [data-testid="stFileUploaderDropzone"] button{
+  position: relative;
+}
+#qa-uploader [data-testid="stFileUploaderDropzone"] button *{
+  opacity: 0 !important;            /* 버튼 내부 원래 텍스트/아이콘 숨김 */
+}
+#qa-uploader [data-testid="stFileUploaderDropzone"] button::after{
+  content: var(--btn);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 업로더를 래핑해서 위 CSS가 이 업로더에만 적용되도록 함
+st.markdown('<div id="qa-uploader">', unsafe_allow_html=True)
+
 uploaded_files = st.file_uploader(
-    "📎 이미지/파일 첨부 (이미지, PDF, Office 문서)",
+    "",                                  # 라벨은 숨김
+    label_visibility="collapsed",
     accept_multiple_files=True,
     type=["png","jpg","jpeg","webp","pdf","ppt","pptx","xls","xlsx","doc","docx"],
-    help="이미지·PDF는 설계사 화면에서 미리보기가 가능합니다.",
-    key=f"uploader_{st.session_state['uploader_key']}",   # ← 추가
+    help="최대 200MB / PNG·JPG·PDF 등 지원",
+    key=f'uploader_{st.session_state.get("uploader_key", 0)}',
 )
 
+st.markdown('</div>', unsafe_allow_html=True)
+# === 업로더 전용 CSS + 래퍼 끝
 if st.button("✅ 시트에 등록하기"):
     # 1) 필수값 체크
     if not question.strip() or not answer.strip():
