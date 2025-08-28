@@ -124,7 +124,7 @@ def upload_to_drive(uploaded_file) -> dict:
     try:
         target_folder_id = resolve_upload_folder_id(drive)
     except Exception as e:
-        #st.error("업로드 폴더를 확정하지 못해 중단합니다.")
+        st.error("업로드 폴더를 확정하지 못해 중단합니다.")
         raise
 
 # (이 아래부터는 target_folder_id 사용)
@@ -174,7 +174,7 @@ def upload_to_drive(uploaded_file) -> dict:
     except Exception as e:
         # 공개 정책/조직 정책으로 실패해도 업로드는 성공이므로 경고만 띄우고 계속
         #st.warning(f"권한 부여 실패(조직 정책 가능성): {e}\n파일은 생성되었습니다. 기본 링크로 계속 진행합니다.")
-        #st.exception(e)
+        st.exception(e)
 
     # 3) 반환 메타 구성
     is_image = (f.get("mimeType", "").startswith("image/"))
