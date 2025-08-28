@@ -158,7 +158,7 @@ def upload_to_drive(uploaded_file) -> dict:
     ).execute()
 
     # 생성 결과 점검 (문제 없으면 주석 처리 가능)
-    st.write({"created_file": f})
+    # st.write({"created_file": f})
 
     file_id = f.get("id")
     if not file_id:
@@ -282,6 +282,8 @@ else:
     st.error("시트에 '번호' 컬럼이 없습니다. 시트 구조를 확인하세요.")
 
 # ========== Q&A 등록 폼 ==========
+if "uploader_key" not in st.session_state:
+    st.session_state["uploader_key"] = 0
 if 'reset' not in st.session_state:
     st.session_state['reset'] = False
 
