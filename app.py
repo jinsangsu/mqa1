@@ -64,10 +64,10 @@ def _pdf_preview_url(file_id: str) -> str:
     return f"https://drive.google.com/file/d/{file_id}/preview"
 
 @st.cache_data(show_spinner=False)
-def resolve_upload_folder_id(drive, *, force_search=False) -> str:
+def resolve_upload_folder_id(_drive, *, force_search=False) -> str:
     """
-    1) secrets의 폴더ID를 우선 사용(로그 없음)
-    2) 필요하면 공유드라이브에서 '업로드용' 폴더를 조용히 찾아 대체
+    1) secrets의 폴더ID 우선 사용(무로그)
+    2) 필요 시 공유드라이브에서 '업로드용' 폴더를 조용히 찾아 대체
     """
     if not force_search:
         folder_id = (
@@ -77,14 +77,12 @@ def resolve_upload_folder_id(drive, *, force_search=False) -> str:
         if folder_id:
             return folder_id
 
-    # 폴더가 하나뿐이라면 이름을 '업로드용'으로 맞춰두는 걸 권장합니다.
     shared_drive_id = (st.secrets.get("google", {}) or {}).get("shared_drive_id", "")
-    folder_name = (st.secrets.get("google", {}) or {}).get("uploads_folder_name", "업로드용")
-
+    folder_name     = (st.secrets.get("google", {}) or {}).get("uploads_folder_name", "업로드용")
     if not shared_drive_id:
         raise RuntimeError("shared_drive_id가 비어 있습니다. [google].shared_drive_id를 설정해 주세요.")
 
-    resp = drive.files().list(
+    resp = _drive.files().list(  # ← 여기서부터 전부 `_drive` 사용
         corpora="drive",
         driveId=shared_drive_id,
         q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
@@ -99,8 +97,7 @@ def resolve_upload_folder_id(drive, *, force_search=False) -> str:
         raise RuntimeError(f"공유드라이브에서 '{folder_name}' 폴더를 찾지 못했습니다.")
     picked = files[0]["id"]
 
-    # 나중에 확인할 수 있도록 세션에 저장(화면엔 표시 안 함)
-    st.session_state["resolved_upload_folder_id"] = picked
+    st.session_state["resolved_upload_folder_id"] = picked  # (선택) 실제 사용 ID 기록
     return picked
 
 def upload_to_drive(uploaded_file) -> dict:
