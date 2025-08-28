@@ -138,7 +138,7 @@ def upload_to_drive(uploaded_file) -> dict:
         "name": uploaded_file.name,
         "parents": [target_folder_id],
         # "mimeType": mime,  ← 필요시 주석 해제
-
+    }
     # 1) 파일 생성
     file_bytes = uploaded_file.getvalue()
     mime = getattr(uploaded_file, "type", None) or "application/octet-stream"
