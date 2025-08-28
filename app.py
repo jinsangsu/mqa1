@@ -49,8 +49,13 @@ def _get_drive_creds():
 def get_drive_client():
     return build("drive", "v3", credentials=_get_drive_creds())
 
-DRIVE_UPLOAD_FOLDER_ID = st.secrets.get("drive_upload_folder_id", "")
-DRIVE_LINK_SHARING     = st.secrets.get("drive_link_sharing", "anyone")  # anyone | domain
+DRIVE_UPLOAD_FOLDER_ID = (
+    st.secrets.get("drive_upload_folder_id")
+    or (st.secrets.get("google", {}) or {}).get("uploads_folder_id", "")
+)
+DRIVE_LINK_SHARING = st.secrets.get("drive_link_sharing", "anyone")  # "anyone" | "domain"
+ORG_DOMAIN_FOR_DRIVE = "chunghobb.com"  # 사내용 공유("domain")을 쓰는 경우 실제 조직 도메인으로 맞추기
+
 
 def _image_embed_url(file_id: str) -> str:
     return f"https://drive.google.com/uc?export=view&id={file_id}"
@@ -59,36 +64,81 @@ def _pdf_preview_url(file_id: str) -> str:
     return f"https://drive.google.com/file/d/{file_id}/preview"
 
 def upload_to_drive(uploaded_file) -> dict:
-    """Streamlit UploadedFile → Drive 업로드 + 링크공개. 임베드/미리보기 URL까지 생성."""
+    """Streamlit UploadedFile → Drive 업로드 + (가능하면) 링크공개. 진단/예외 처리 강화."""
     drive = get_drive_client()
+
+    # 0) 업로드 폴더 ID 검증 (빈 값/권한 오류를 업로드 전에 잡음)
+    if not DRIVE_UPLOAD_FOLDER_ID:
+        st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
+        raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
+    try:
+        # 폴더 존재/접근 확인 (공유드라이브 지원)
+        drive.files().get(
+            fileId=DRIVE_UPLOAD_FOLDER_ID,
+            supportsAllDrives=True,
+            fields="id,name,driveId"
+        ).execute()
+    except Exception as e:
+        st.error(f"업로드 폴더 접근 불가: {DRIVE_UPLOAD_FOLDER_ID} — {e}")
+        st.exception(e)
+        raise
+
+    # 1) 파일 생성
     file_bytes = uploaded_file.getvalue()
     mime = getattr(uploaded_file, "type", None) or "application/octet-stream"
-
     media = MediaIoBaseUpload(io.BytesIO(file_bytes), mimetype=mime, resumable=True)
-    meta = {"name": uploaded_file.name, "parents": [DRIVE_UPLOAD_FOLDER_ID], "mimeType": mime}
+
+    meta = {
+        "name": uploaded_file.name,
+        "parents": [DRIVE_UPLOAD_FOLDER_ID],
+        # "mimeType": mime,  # 굳이 지정 안 해도 무방 (문제시 주석 해제)
+    }
+
     f = drive.files().create(
-        body=meta, media_body=media,
+        body=meta,
+        media_body=media,
         fields="id,name,mimeType,webViewLink,iconLink",
         supportsAllDrives=True,
     ).execute()
 
-    # 공개/도메인 권한 부여
-    perm_body = {"role": "reader", "type": "anyone" if DRIVE_LINK_SHARING=="anyone" else "domain"}
-    if DRIVE_LINK_SHARING == "domain":
-        perm_body.update({"domain": "kbinsure.co.kr", "allowFileDiscovery": False})
-    drive.permissions().create(fileId=f["id"], body=perm_body, supportsAllDrives=True).execute()
+    # 생성 결과 점검 (문제 없으면 주석 처리 가능)
+    st.write({"created_file": f})
 
-    is_image = f["mimeType"].startswith("image/")
+    file_id = f.get("id")
+    if not file_id:
+        st.error("Drive 파일 생성에 실패했습니다. 응답에 id가 없습니다.")
+        raise RuntimeError(f"Drive create() response: {f}")
+
+    # 2) 권한 부여(조직 정책에 따라 실패할 수 있으므로 예외 허용)
+    try:
+        if DRIVE_LINK_SHARING == "anyone":
+            perm_body = {"role": "reader", "type": "anyone"}
+        else:  # "domain"
+            perm_body = {"role": "reader", "type": "domain", "domain": ORG_DOMAIN_FOR_DRIVE, "allowFileDiscovery": False}
+
+        drive.permissions().create(
+            fileId=file_id,
+            body=perm_body,
+            supportsAllDrives=True
+        ).execute()
+    except Exception as e:
+        # 공개 정책/조직 정책으로 실패해도 업로드는 성공이므로 경고만 띄우고 계속
+        st.warning(f"권한 부여 실패(조직 정책 가능성): {e}\n파일은 생성되었습니다. 기본 링크로 계속 진행합니다.")
+        st.exception(e)
+
+    # 3) 반환 메타 구성
+    is_image = (f.get("mimeType", "").startswith("image/"))
     return {
-        "id": f["id"],
-        "name": f["name"],
-        "mime": f["mimeType"],
-        "view_url": f["webViewLink"],                       # 새탭 열람
-        "embed_url": _image_embed_url(f["id"]) if is_image  # 이미지 미리보기
-                     else (_pdf_preview_url(f["id"]) if f["mimeType"]=="application/pdf" else f["webViewLink"]),
+        "id": file_id,
+        "name": f.get("name"),
+        "mime": f.get("mimeType"),
+        "view_url": f.get("webViewLink"),  # 새탭 열람
+        "embed_url": _image_embed_url(file_id) if is_image
+                     else (_pdf_preview_url(file_id) if f.get("mimeType") == "application/pdf" else f.get("webViewLink")),
         "is_image": is_image,
         "icon": f.get("iconLink"),
     }
+
 def get_worksheet():
     sheet_key = (st.secrets.get("google", {}) or {}).get("qa_sheet_key")
     if not sheet_key:
@@ -251,6 +301,7 @@ if st.button("✅ 시트에 등록하기"):
                             attachments.append(upload_to_drive(uf))
                         except Exception as e:
                             st.error(f"첨부 업로드 실패: {uf.name} — {e}")
+                            st.exception(e)
 
                 attachments_json = json.dumps(attachments, ensure_ascii=False)
 
