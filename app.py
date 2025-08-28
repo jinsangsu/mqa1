@@ -161,7 +161,7 @@ def get_worksheet():
     try:
         ws = spreadsheet.worksheet(tab_name)  # 탭 "이름"으로 선택
         return ws
-    except WorksheetNotFound:  # ← 여기로 교체
+    except gspread.WorksheetNotFound:
         ws = spreadsheet.get_worksheet(0)
         st.warning(f"'{tab_name}' 탭을 찾지 못해 첫 번째 탭({ws.title})을 사용합니다. 시트 탭 이름을 확인해 주세요.")
         return ws
