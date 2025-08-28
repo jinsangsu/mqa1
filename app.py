@@ -62,6 +62,7 @@ def _image_embed_url(file_id: str) -> str:
 
 def _pdf_preview_url(file_id: str) -> str:
     return f"https://drive.google.com/file/d/{file_id}/preview"
+
 def resolve_upload_folder_id(drive):
     """1) secrets의 폴더ID 접근 가능? → 통과면 그대로 사용
        2) 실패 시 공유드라이브 전체에서 '업로드용' 폴더를 검색해 ID 후보를 보여줌(대체/검증용)"""
@@ -125,18 +126,19 @@ def upload_to_drive(uploaded_file) -> dict:
     if not DRIVE_UPLOAD_FOLDER_ID:
         st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
         raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
+
     try:
-        # 폴더 존재/접근 확인 (공유드라이브 지원)
-        drive.files().get(
-            fileId=DRIVE_UPLOAD_FOLDER_ID,
-            supportsAllDrives=True,
-            fields="id,name,driveId"
-        ).execute()
+        target_folder_id = resolve_upload_folder_id(drive)
     except Exception as e:
-        st.error(f"업로드 폴더 접근 불가: {DRIVE_UPLOAD_FOLDER_ID} — {e}")
-        st.exception(e)
+        st.error("업로드 폴더를 확정하지 못해 중단합니다.")
         raise
 
+# (이 아래부터는 target_folder_id 사용)
+    meta = {
+        "name": uploaded_file.name,
+        "parents": [target_folder_id],
+        # "mimeType": mime,  ← 필요시 주석 해제
+    }
     # 1) 파일 생성
     file_bytes = uploaded_file.getvalue()
     mime = getattr(uploaded_file, "type", None) or "application/octet-stream"
@@ -144,7 +146,7 @@ def upload_to_drive(uploaded_file) -> dict:
 
     meta = {
         "name": uploaded_file.name,
-        "parents": [DRIVE_UPLOAD_FOLDER_ID],
+        "parents": [target_folder_id],
         # "mimeType": mime,  # 굳이 지정 안 해도 무방 (문제시 주석 해제)
     }
 
@@ -461,4 +463,3 @@ if not df.empty and "작성자" in df.columns and "질문" in df.columns:
         st.markdown(f"- **{row['작성자']}**: {row['질문']}")
 else:
     st.info("최근 질문 데이터가 없습니다. (컬럼명 또는 데이터 확인 필요)")
-
