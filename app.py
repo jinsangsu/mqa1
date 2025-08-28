@@ -161,20 +161,25 @@ def upload_to_drive(uploaded_file) -> dict:
 
     # 2) 권한 부여(조직 정책에 따라 실패할 수 있으므로 예외 허용)
     try:
+        perm_body = None
         if DRIVE_LINK_SHARING == "anyone":
             perm_body = {"role": "reader", "type": "anyone"}
-        else:  # "domain"
-            perm_body = {"role": "reader", "type": "domain", "domain": ORG_DOMAIN_FOR_DRIVE, "allowFileDiscovery": False}
-
-        drive.permissions().create(
-            fileId=file_id,
-            body=perm_body,
-            supportsAllDrives=True
-        ).execute()
-    except Exception as e:
-        # 공개 정책/조직 정책으로 실패해도 업로드는 성공이므로 경고만 띄우고 계속
-        #st.warning(f"권한 부여 실패(조직 정책 가능성): {e}\n파일은 생성되었습니다. 기본 링크로 계속 진행합니다.")
-        st.exception(e)
+        elif DRIVE_LINK_SHARING == "domain":
+            perm_body = {
+                "role": "reader",
+                "type": "domain",
+                "domain": ORG_DOMAIN_FOR_DRIVE,
+                "allowFileDiscovery": False,
+            }
+        if perm_body:
+            drive.permissions().create(
+                fileId=file_id,
+                body=perm_body,
+                supportsAllDrives=True
+            ).execute()
+    except Exception:
+    # cannotModifyInheritedPermission(403) 등은 그냥 패스
+        pass
 
     # 3) 반환 메타 구성
     is_image = (f.get("mimeType", "").startswith("image/"))
@@ -309,6 +314,7 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
     type=["png","jpg","jpeg","webp","pdf","ppt","pptx","xls","xlsx","doc","docx"],
     help="이미지·PDF는 설계사 화면에서 미리보기가 가능합니다.",
+    key=f"uploader_{st.session_state['uploader_key']}",   # ← 추가
 )
 
 if st.button("✅ 시트에 등록하기"):
@@ -368,6 +374,7 @@ if st.button("✅ 시트에 등록하기"):
 
                 st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
                 st.session_state['reset'] = True
+                st.session_state['uploader_key'] += 1     # 파일 업로더 비우기
                 st.rerun()
 
             except Exception as e:
