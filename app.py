@@ -124,8 +124,8 @@ def upload_to_drive(uploaded_file) -> dict:
 
     # 0) 업로드 폴더 ID 검증 (빈 값/권한 오류를 업로드 전에 잡음)
     if not DRIVE_UPLOAD_FOLDER_ID:
-    st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
-    raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
+        st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
+        raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
 
     try:
         target_folder_id = resolve_upload_folder_id(drive)
