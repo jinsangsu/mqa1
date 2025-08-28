@@ -63,42 +63,60 @@ def _image_embed_url(file_id: str) -> str:
 def _pdf_preview_url(file_id: str) -> str:
     return f"https://drive.google.com/file/d/{file_id}/preview"
 
-@st.cache_data(show_spinner=False)
-def resolve_upload_folder_id(_drive, *, force_search=False) -> str:
-    """
-    1) secrets의 폴더ID 우선 사용(무로그)
-    2) 필요 시 공유드라이브에서 '업로드용' 폴더를 조용히 찾아 대체
-    """
-    if not force_search:
-        folder_id = (
-            st.secrets.get("drive_upload_folder_id")
-            or (st.secrets.get("google", {}) or {}).get("uploads_folder_id", "")
-        )
-        if folder_id:
-            return folder_id
+def resolve_upload_folder_id(drive):
+    """1) secrets의 폴더ID 접근 가능? → 통과면 그대로 사용
+       2) 실패 시 공유드라이브 전체에서 '업로드용' 폴더를 검색해 ID 후보를 보여줌(대체/검증용)"""
+    folder_id = DRIVE_UPLOAD_FOLDER_ID
+    # 0) 캐시에 어떤 값이 들어왔는지 눈으로 확인
+    st.info(f"현재 설정된 업로드 폴더 ID: `{folder_id}`")
 
+    # 1) 지정 ID 직접 조회(공유드라이브 지원)
+    try:
+        meta = drive.files().get(
+            fileId=folder_id,
+            supportsAllDrives=True,
+            fields="id,name,driveId,mimeType,parents"
+        ).execute()
+        # 실제로 폴더인지도 표시
+        st.success(f"업로드 대상 확인 성공: {meta.get('name')} (mime={meta.get('mimeType')})")
+        return folder_id
+    except Exception as e:
+        st.warning(f"지정 폴더ID 직접 조회 실패 → 공유드라이브에서 대체 탐색 시도: {e}")
+
+    # 2) 공유드라이브 내부에서 '업로드용' 폴더 검색(이름 다른 경우 아래 name 필드 수정)
     shared_drive_id = (st.secrets.get("google", {}) or {}).get("shared_drive_id", "")
-    folder_name     = (st.secrets.get("google", {}) or {}).get("uploads_folder_name", "업로드용")
     if not shared_drive_id:
-        raise RuntimeError("shared_drive_id가 비어 있습니다. [google].shared_drive_id를 설정해 주세요.")
+        st.error("secrets에 [google].shared_drive_id가 없습니다.")
+        raise RuntimeError("Missing shared_drive_id")
 
-    resp = _drive.files().list(  # ← 여기서부터 전부 `_drive` 사용
-        corpora="drive",
-        driveId=shared_drive_id,
-        q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
-        fields="files(id,name)",
-        includeItemsFromAllDrives=True,
-        supportsAllDrives=True,
-        pageSize=5,
-        spaces="drive",
-    ).execute()
-    files = resp.get("files", [])
-    if not files:
-        raise RuntimeError(f"공유드라이브에서 '{folder_name}' 폴더를 찾지 못했습니다.")
-    picked = files[0]["id"]
+    try:
+        resp = drive.files().list(
+            corpora="drive",
+            driveId=shared_drive_id,
+            q="mimeType='application/vnd.google-apps.folder' and name='업로드용' and trashed=false",
+            fields="files(id,name,parents)",
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            pageSize=10,
+            spaces="drive",
+        ).execute()
+        files = resp.get("files", [])
+        if not files:
+            st.error("공유드라이브에서 이름이 '업로드용'인 폴더를 못 찾았습니다. 폴더 이름/위치를 확인해 주세요.")
+            raise RuntimeError("Upload folder not found by search")
 
-    st.session_state["resolved_upload_folder_id"] = picked  # (선택) 실제 사용 ID 기록
-    return picked
+        # 후보들 보여주기
+        st.info("공유드라이브에서 찾은 '업로드용' 후보들(ID):")
+        for f in files:
+            st.code(f"{f['name']} → {f['id']} (parents={f.get('parents')})")
+        # 첫 번째 것을 임시 사용
+        picked = files[0]["id"]
+        st.warning(f"임시로 이 ID를 사용해 업로드 시도: {picked}  ← 이 값으로 secrets.toml 갱신 권장")
+        return picked
+    except Exception as e:
+        st.error(f"대체 탐색 중 오류: {e}")
+        st.exception(e)
+        raise
 
 def upload_to_drive(uploaded_file) -> dict:
     """Streamlit UploadedFile → Drive 업로드 + (가능하면) 링크공개. 진단/예외 처리 강화."""
