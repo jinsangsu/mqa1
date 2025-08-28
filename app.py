@@ -71,7 +71,6 @@ def resolve_upload_folder_id(drive):
         st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
         raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
     return folder_id
-
 def upload_to_drive(uploaded_file) -> dict:
     """Streamlit UploadedFile → Drive 업로드 + (가능하면) 링크공개. 진단/예외 처리 강화."""
     drive = get_drive_client()
