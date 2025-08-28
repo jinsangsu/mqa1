@@ -240,6 +240,31 @@ hr { margin-top: 2px !important; margin-bottom: 2px !important; }
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* 1) Drop 영역 안내 문구 한글로 */
+[data-testid="stFileUploaderDropzone"] div div:first-child{
+  visibility: hidden; position: relative;
+}
+[data-testid="stFileUploaderDropzone"] div div:first-child::after{
+  content: "매니저님! 여기에 파일을 올려놓으세요";
+  visibility: visible; position: absolute; inset: 0;
+  display:flex; align-items:center;
+}
+
+/* 2) 'Browse files' 버튼 문구 한글로 */
+[data-testid="stFileUploaderDropzone"] button div p,
+[data-testid="stFileUploaderDropzone"] button div span { display:none; }
+[data-testid="stFileUploaderDropzone"] button::after{
+  content: "사진 또는 파일 선택";
+}
+
+/* 3) (선택) 용량/확장자 안내 줄 숨기기 */
+[data-testid="stFileUploaderDropzone"] small { display:none; }
+</style>
+""", unsafe_allow_html=True)
+
+
 # ------- 상단 캐릭터+인사말 -------
 char_img = get_character_img_base64("title_image.png")
 
