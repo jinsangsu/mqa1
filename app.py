@@ -318,20 +318,18 @@ uploaded_files = st.file_uploader(
 )
 
 if st.button("✅ 시트에 등록하기"):
-    # 1. 질문/답변 필수값 체크 먼저!
+    # 1) 필수값 체크
     if not question.strip() or not answer.strip():
         st.error("⚠ 질문과 답변은 필수 입력입니다. 반드시 내용을 입력해 주세요.")
     else:
         existing_questions = [q.strip() for q in df["질문"].tolist()]
-
         is_near_duplicate = any(
-        difflib.SequenceMatcher(None, question.strip(), q).ratio() >= 0.9
-        for q in existing_questions
+            difflib.SequenceMatcher(None, question.strip(), q).ratio() >= 0.9
+            for q in existing_questions
         )
 
         if question.strip() and is_near_duplicate:
             st.warning("⚠ 매니저님 감사합니다. 그런데 이미 유사한 질문이 등록되어 있네요.")
-
             similar_list = sorted(
                 (
                     (q, difflib.SequenceMatcher(None, question.strip(), q).ratio())
@@ -340,45 +338,56 @@ if st.button("✅ 시트에 등록하기"):
                 key=lambda x: x[1],
                 reverse=True
             )[:3]
-
             for q, r in similar_list:
                 st.info(f"• 유사도 {r:.0%} → {q}")
+
         else:
-            if len(df) == 0:
-                new_no = 1
-            else:
-                new_no = df["번호"].max() + 1
+            new_no = 1 if len(df) == 0 else df["번호"].max() + 1
             today = datetime.date.today().strftime("%Y-%m-%d")
 
             try:
-                # ✅ 파일 업로드는 try문 안, 버튼 클릭 내부에서 실행되어야 합니다.
+                # ✅ (A) 첨부 업로드: 스피너 + 진행률
                 attachments = []
                 if uploaded_files:
-                    for uf in uploaded_files:
-                        try:
-                            attachments.append(upload_to_drive(uf))
-                        except Exception as e:
-                            st.error(f"첨부 업로드 실패: {uf.name} — {e}")
-                            st.exception(e)
+                    total = len(uploaded_files)
+                    with st.spinner(f"이미지/파일 업로드 중입니다... (총 {total}개)"):
+                        prog = st.progress(0)
+                        for idx, uf in enumerate(uploaded_files, start=1):
+                            try:
+                                attachments.append(upload_to_drive(uf))
+                            except Exception as e:
+                                st.error(f"첨부 업로드 실패: {uf.name} — {e}")
+                                st.exception(e)
+                            finally:
+                                prog.progress(idx / total)
+                        prog.empty()  # 진행률 바 제거
 
                 attachments_json = json.dumps(attachments, ensure_ascii=False)
 
-                worksheet.append_row([
-                    str(new_no),
-                    str(question),
-                    str(answer),
-                    str(manager_name),
-                    str(today),
-                    attachments_json,   # ← 6번째 컬럼: 첨부_JSON
-                ])
+                # ✅ (B) 시트 기록: 스피너
+                with st.spinner("시트에 기록 중..."):
+                    worksheet.append_row(
+                        [
+                            str(new_no),
+                            str(question),
+                            str(answer),
+                            str(manager_name),
+                            str(today),
+                            attachments_json,   # ← 6번째 컬럼: 첨부_JSON
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
 
+                # ✅ (C) 완료 메시지 + 폼/업로더 초기화
                 st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-                st.session_state['reset'] = True
-                st.session_state['uploader_key'] += 1     # 파일 업로더 비우기
+                st.session_state["reset"] = True
+                st.session_state.setdefault("uploader_key", 0)
+                st.session_state["uploader_key"] += 1   # 파일 업로더 비우기
                 st.rerun()
 
             except Exception as e:
-                st.error(f"등록 중 에러 발생: {e}")
+                st.error("❌ 등록 중 에러 발생")
+                st.exception(e)
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
