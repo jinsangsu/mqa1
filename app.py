@@ -240,30 +240,29 @@ hr { margin-top: 2px !important; margin-bottom: 2px !important; }
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("### 📎 이미지/파일 올리기")
+# ⬇️ 업로더 바로 위 CSS
 st.markdown("""
 <style>
-/* 1) Drop 영역 안내 문구 한글로 */
-[data-testid="stFileUploaderDropzone"] div div:first-child{
-  visibility: hidden; position: relative;
+#qa-uploader [data-testid="stFileUploaderDropzone"] div div:first-child{visibility:hidden;position:relative;}
+#qa-uploader [data-testid="stFileUploaderDropzone"] div div:first-child::after{
+  content:"여기에 파일을 끌어다 놓으세요";visibility:visible;position:absolute;inset:0;display:flex;align-items:center;
 }
-[data-testid="stFileUploaderDropzone"] div div:first-child::after{
-  content: "매니저님! 여기에 파일을 올려놓으세요";
-  visibility: visible; position: absolute; inset: 0;
-  display:flex; align-items:center;
-}
-
-/* 2) 'Browse files' 버튼 문구 한글로 */
-[data-testid="stFileUploaderDropzone"] button div p,
-[data-testid="stFileUploaderDropzone"] button div span { display:none; }
-[data-testid="stFileUploaderDropzone"] button::after{
-  content: "사진 또는 파일 선택";
-}
-
-/* 3) (선택) 용량/확장자 안내 줄 숨기기 */
-[data-testid="stFileUploaderDropzone"] small { display:none; }
+#qa-uploader [data-testid="stFileUploaderDropzone"] button div p,
+#qa-uploader [data-testid="stFileUploaderDropzone"] button div span{display:none;}
+#qa-uploader [data-testid="stFileUploaderDropzone"] button::after{content:"파일 선택";}
 </style>
 """, unsafe_allow_html=True)
 
+# 스코프를 주기 위해 래퍼 div로 감쌉니다.
+st.markdown('<div id="qa-uploader">', unsafe_allow_html=True)
+uploaded_files = st.file_uploader(
+    "", label_visibility="collapsed",
+    accept_multiple_files=True,
+    type=["png","jpg","jpeg","webp","pdf","ppt","pptx","xls","xlsx","doc","docx"],
+    help="최대 200MB / PNG·JPG·PDF 등 지원",
+)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ------- 상단 캐릭터+인사말 -------
 char_img = get_character_img_base64("title_image.png")
