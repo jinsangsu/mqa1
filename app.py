@@ -9,7 +9,7 @@ import base64
 import io, json
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-from gspread.exceptions import WorksheetNotFound
+
 
 def get_character_img_base64(img_path):
     if os.path.exists(img_path):
@@ -62,14 +62,61 @@ def _image_embed_url(file_id: str) -> str:
 
 def _pdf_preview_url(file_id: str) -> str:
     return f"https://drive.google.com/file/d/{file_id}/preview"
-
 def resolve_upload_folder_id(drive):
-    """지정된 폴더 ID를 신뢰하여 그대로 사용 (성공 시 불필요한 경고/검색 제거)."""
+    """1) secrets의 폴더ID 접근 가능? → 통과면 그대로 사용
+       2) 실패 시 공유드라이브 전체에서 '업로드용' 폴더를 검색해 ID 후보를 보여줌(대체/검증용)"""
     folder_id = DRIVE_UPLOAD_FOLDER_ID
-    if not folder_id:
-        st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
-        raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
-    return folder_id
+    # 0) 캐시에 어떤 값이 들어왔는지 눈으로 확인
+    st.info(f"현재 설정된 업로드 폴더 ID: `{folder_id}`")
+
+    # 1) 지정 ID 직접 조회(공유드라이브 지원)
+    try:
+        meta = drive.files().get(
+            fileId=folder_id,
+            supportsAllDrives=True,
+            fields="id,name,driveId,mimeType,parents"
+        ).execute()
+        # 실제로 폴더인지도 표시
+        st.success(f"업로드 대상 확인 성공: {meta.get('name')} (mime={meta.get('mimeType')})")
+        return folder_id
+    except Exception as e:
+        st.warning(f"지정 폴더ID 직접 조회 실패 → 공유드라이브에서 대체 탐색 시도: {e}")
+
+    # 2) 공유드라이브 내부에서 '업로드용' 폴더 검색(이름 다른 경우 아래 name 필드 수정)
+    shared_drive_id = (st.secrets.get("google", {}) or {}).get("shared_drive_id", "")
+    if not shared_drive_id:
+        st.error("secrets에 [google].shared_drive_id가 없습니다.")
+        raise RuntimeError("Missing shared_drive_id")
+
+    try:
+        resp = drive.files().list(
+            corpora="drive",
+            driveId=shared_drive_id,
+            q="mimeType='application/vnd.google-apps.folder' and name='업로드용' and trashed=false",
+            fields="files(id,name,parents)",
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            pageSize=10,
+            spaces="drive",
+        ).execute()
+        files = resp.get("files", [])
+        if not files:
+            st.error("공유드라이브에서 이름이 '업로드용'인 폴더를 못 찾았습니다. 폴더 이름/위치를 확인해 주세요.")
+            raise RuntimeError("Upload folder not found by search")
+
+        # 후보들 보여주기
+        st.info("공유드라이브에서 찾은 '업로드용' 후보들(ID):")
+        for f in files:
+            st.code(f"{f['name']} → {f['id']} (parents={f.get('parents')})")
+        # 첫 번째 것을 임시 사용
+        picked = files[0]["id"]
+        st.warning(f"임시로 이 ID를 사용해 업로드 시도: {picked}  ← 이 값으로 secrets.toml 갱신 권장")
+        return picked
+    except Exception as e:
+        st.error(f"대체 탐색 중 오류: {e}")
+        st.exception(e)
+        raise
+
 def upload_to_drive(uploaded_file) -> dict:
     """Streamlit UploadedFile → Drive 업로드 + (가능하면) 링크공개. 진단/예외 처리 강화."""
     drive = get_drive_client()
@@ -78,19 +125,18 @@ def upload_to_drive(uploaded_file) -> dict:
     if not DRIVE_UPLOAD_FOLDER_ID:
         st.error("업로드용 폴더 ID가 비어 있습니다. secrets.toml의 drive_upload_folder_id 또는 [google].uploads_folder_id를 확인해 주세요.")
         raise RuntimeError("Missing DRIVE_UPLOAD_FOLDER_ID")
-
     try:
-        target_folder_id = resolve_upload_folder_id(drive)
+        # 폴더 존재/접근 확인 (공유드라이브 지원)
+        drive.files().get(
+            fileId=DRIVE_UPLOAD_FOLDER_ID,
+            supportsAllDrives=True,
+            fields="id,name,driveId"
+        ).execute()
     except Exception as e:
-        st.error("업로드 폴더를 확정하지 못해 중단합니다.")
+        st.error(f"업로드 폴더 접근 불가: {DRIVE_UPLOAD_FOLDER_ID} — {e}")
+        st.exception(e)
         raise
 
-# (이 아래부터는 target_folder_id 사용)
-    meta = {
-        "name": uploaded_file.name,
-        "parents": [target_folder_id],
-        # "mimeType": mime,  ← 필요시 주석 해제
-    }
     # 1) 파일 생성
     file_bytes = uploaded_file.getvalue()
     mime = getattr(uploaded_file, "type", None) or "application/octet-stream"
@@ -98,7 +144,7 @@ def upload_to_drive(uploaded_file) -> dict:
 
     meta = {
         "name": uploaded_file.name,
-        "parents": [target_folder_id],
+        "parents": [DRIVE_UPLOAD_FOLDER_ID],
         # "mimeType": mime,  # 굳이 지정 안 해도 무방 (문제시 주석 해제)
     }
 
@@ -110,7 +156,7 @@ def upload_to_drive(uploaded_file) -> dict:
     ).execute()
 
     # 생성 결과 점검 (문제 없으면 주석 처리 가능)
-    # st.write({"created_file": f})
+    st.write({"created_file": f})
 
     file_id = f.get("id")
     if not file_id:
@@ -154,17 +200,8 @@ def get_worksheet():
         st.stop()
 
     spreadsheet = gc.open_by_key(sheet_key)
-
-    # 기본 탭 이름: '질의응답시트' (secrets로 오버라이드 가능)
-    tab_name = (st.secrets.get("google", {}) or {}).get("qa_sheet_tab", "질의응답시트")
-
-    try:
-        ws = spreadsheet.worksheet(tab_name)  # 탭 "이름"으로 선택
-        return ws
-    except gspread.WorksheetNotFound:
-        ws = spreadsheet.get_worksheet(0)
-        st.warning(f"'{tab_name}' 탭을 찾지 못해 첫 번째 탭({ws.title})을 사용합니다. 시트 탭 이름을 확인해 주세요.")
-        return ws
+    worksheet = spreadsheet.get_worksheet(0)
+    return worksheet
 # ====== 디자인 및 인삿말 ======
 st.markdown("""
 <style>
@@ -243,9 +280,6 @@ else:
     st.error("시트에 '번호' 컬럼이 없습니다. 시트 구조를 확인하세요.")
 
 # ========== Q&A 등록 폼 ==========
-if "uploader_key" not in st.session_state:
-    st.session_state["uploader_key"] = 0
-
 if 'reset' not in st.session_state:
     st.session_state['reset'] = False
 
@@ -277,8 +311,8 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
     type=["png","jpg","jpeg","webp","pdf","ppt","pptx","xls","xlsx","doc","docx"],
     help="이미지·PDF는 설계사 화면에서 미리보기가 가능합니다.",
-    key=f"uploader_{st.session_state['uploader_key']}",
 )
+
 if st.button("✅ 시트에 등록하기"):
     # 1. 질문/답변 필수값 체크 먼저!
     if not question.strip() or not answer.strip():
@@ -325,26 +359,21 @@ if st.button("✅ 시트에 등록하기"):
 
                 attachments_json = json.dumps(attachments, ensure_ascii=False)
 
-                worksheet.append_row(
-    [
-        str(new_no),
-        str(question),
-        str(answer),
-        str(manager_name),
-        str(today),
-        attachments_json,   # ← 6번째 컬럼: 첨부_JSON
-    ],
-    value_input_option="USER_ENTERED"
-)
+                worksheet.append_row([
+                    str(new_no),
+                    str(question),
+                    str(answer),
+                    str(manager_name),
+                    str(today),
+                    attachments_json,   # ← 6번째 컬럼: 첨부_JSON
+                ])
 
                 st.success("✅ 질의응답이 성공적으로 등록되었습니다!")
-                st.session_state["reset"] = True
-                st.session_state["uploader_key"] += 1   # ← 파일 업로더 비우기
+                st.session_state['reset'] = True
                 st.rerun()
 
             except Exception as e:
-                 st.error("❌ 시트에 행 추가 실패")
-                 st.exception(e)  # ← 상세 스택 출력
+                st.error(f"등록 중 에러 발생: {e}")
 
 st.markdown("---")
 st.subheader("🔎 Q&A 복합검색(키워드, 작성자) 후 수정·삭제")
@@ -394,8 +423,7 @@ if search_query.strip() or search_writer.strip():
                                 del st.session_state["edit_num"]
                                 st.rerun()
                             except Exception as e:
-                                st.error("❌ 시트에 행 추가 실패")
-                                st.exception(e)  # ← 상세 스택 출력
+                                st.error(f"수정 중 에러 발생: {e}")
                 else:
                     if col_edit.button(f"✏️ 수정_{row['번호']}", key=f"edit_{row['번호']}"):
                         st.session_state["edit_num"] = row["번호"]
@@ -415,8 +443,7 @@ if search_query.strip() or search_writer.strip():
                                 del st.session_state["delete_num"]
                                 st.rerun()
                             except Exception as e:
-                                st.error("❌ 시트에 행 추가 실패")
-                                st.exception(e)  # ← 상세 스택 출력
+                                st.error(f"삭제 중 에러 발생: {e}")
                     with col_cancel:
                         if st.button(f"취소_{row['번호']}", key=f"cancel_del_{row['번호']}"):
                             del st.session_state["delete_num"]
